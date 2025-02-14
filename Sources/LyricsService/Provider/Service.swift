@@ -17,6 +17,7 @@ extension LyricsProviders {
         case kugou = "Kugou"
         case gecimi = "Gecimi"
         case syair = "Syair"
+        case lrclib = "LRCLIB"
     }
 }
 
