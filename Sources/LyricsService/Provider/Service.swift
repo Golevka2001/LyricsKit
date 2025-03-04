@@ -18,6 +18,7 @@ extension LyricsProviders {
         case gecimi = "Gecimi"
         case syair = "Syair"
         case lrclib = "LRCLIB"
+        case spotify = "Spotify"
     }
 }
 
