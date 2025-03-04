@@ -4,12 +4,6 @@ import Foundation
 import LyricsCore
 import CXExtensions
 
-struct SpotifyAccessToken: Codable {
-    let accessToken: String
-    let accessTokenExpirationTimestampMs: TimeInterval
-    let isAnonymous: Bool
-}
-
 struct SpotifySearchResponse: Codable {
     struct Tracks: Codable {
         struct Item: Codable {
@@ -74,7 +68,7 @@ extension LyricsProviders {
         typealias LyricsToken = SpotifySearchResponse.Tracks.Item
 
         let accessToken: String
-        
+
         init(accessToken: String) {
             self.accessToken = accessToken
         }

@@ -13,7 +13,7 @@ let package = Package(
     products: [
         .library(
             name: "LyricsKit",
-            targets: ["LyricsCore", "LyricsService"]),
+            targets: ["LyricsCore", "LyricsService", "LyricsServiceUI"]),
     ],
     dependencies: [
         .package(url: "https://github.com/MxIris-LyricsX-Project/CXShim", .branchItem("master")),
@@ -21,6 +21,7 @@ let package = Package(
         .package(url: "https://github.com/ddddxxx/Regex", from: "1.0.1"),
         .package(url: "https://github.com/MxIris-Library-Forks/SwiftCF", .branchItem("master")),
         .package(name: "Gzip", url: "https://github.com/1024jp/GzipSwift", from: "5.0.0"),
+        .package(url: "https://github.com/kishikawakatsumi/KeychainAccess", .upToNextMajor(from: "4.0.0")),
     ],
     targets: [
         .target(
@@ -30,6 +31,14 @@ let package = Package(
             name: "LyricsService",
             dependencies: [
                 "LyricsCore", "CXShim", "CXExtensions", "Regex", "Gzip",
+            ]
+        ),
+        .target(
+            name: "LyricsServiceUI",
+            dependencies: [
+                "LyricsCore",
+                "LyricsService",
+                "KeychainAccess",
             ]
         ),
         .testTarget(

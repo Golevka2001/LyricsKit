@@ -13,6 +13,7 @@ import CXShim
 import CXExtensions
 
 #if canImport(Darwin)
+import AppKit
 
 private let syairSearchBaseURLString = "https://syair.info/search"
 private let syairLyricsBaseURL = URL(string: "https://syair.info")!

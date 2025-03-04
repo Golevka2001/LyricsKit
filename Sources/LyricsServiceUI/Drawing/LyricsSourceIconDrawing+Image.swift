@@ -7,6 +7,8 @@
 //  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 
+import LyricsService
+
 #if canImport(CoreGraphics)
 
 import CoreGraphics
