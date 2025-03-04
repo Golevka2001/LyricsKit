@@ -30,7 +30,7 @@ extension LyricsProviders.Xiami: _LyricsProvider {
         let value: XiamiResponseSearchResult.Data.Song
     }
     
-    public static let service: LyricsProviders.Service? = nil
+    public static let service: String? = nil
     
     public func lyricsSearchPublisher(request: LyricsSearchRequest) -> AnyPublisher<LyricsToken, Never> {
         let parameter: [String : Any] = [

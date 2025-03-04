@@ -11,14 +11,37 @@ import Foundation
 
 extension LyricsProviders {
     
-    public enum Service: String, CaseIterable {
-        case netease = "163"
-        case qq = "QQMusic"
-        case kugou = "Kugou"
-        case gecimi = "Gecimi"
-        case syair = "Syair"
-        case lrclib = "LRCLIB"
-        case spotify = "Spotify"
+    public enum Service {
+        case netease
+        case qq
+        case kugou
+        case gecimi
+        case syair
+        case lrclib
+        case spotify(accessToken: String)
+
+        public var displayName: String {
+            switch self {
+            case .netease: return "Netease"
+            case .qq: return "QQMusic"
+            case .kugou: return "Kugou"
+            case .gecimi: return "Gecimi"
+            case .syair: return "Syair"
+            case .lrclib: return "LRCLIB"
+            case .spotify: return "Spotify"
+            }
+        }
+        
+        public static var noAuthenticationRequiredServices: [Service] {
+            [
+                .netease,
+                .qq,
+                .kugou,
+                .gecimi,
+                .syair,
+                .lrclib,
+            ]
+        }
     }
 }
 
@@ -30,6 +53,7 @@ extension LyricsProviders.Service {
         case .qq:       return LyricsProviders.QQMusic()
         case .kugou:    return LyricsProviders.Kugou()
         case .gecimi:   return LyricsProviders.Gecimi()
+        case .spotify(let accessToken): return LyricsProviders.Spotify(accessToken: accessToken)
         #if canImport(Darwin)
         case .syair:    return LyricsProviders.Syair()
         #endif

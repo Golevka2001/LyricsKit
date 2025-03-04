@@ -38,8 +38,8 @@ extension Lyrics.Metadata {
         set { data[.artworkURL] = newValue }
     }
     
-    public var service: LyricsProviders.Service? {
-        get { return data[.service] as? LyricsProviders.Service }
+    public var service: String? {
+        get { return data[.service] as? String }
         set { data[.service] = newValue }
     }
     

@@ -17,7 +17,7 @@ extension LyricsProviders {
         
         var providers: [LyricsProvider]
         
-        public init(service: [LyricsProviders.Service] = LyricsProviders.Service.allCases) {
+        public init(service: [LyricsProviders.Service] = LyricsProviders.Service.noAuthenticationRequiredServices) {
             providers = service.map { $0.create() }
         }
         

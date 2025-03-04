@@ -31,7 +31,7 @@ extension LyricsProviders {
 extension LyricsProviders.QQMusic: _LyricsProvider {
     public typealias LyricsToken = QQMusicSongSearchResult
 
-    public static let service: LyricsProviders.Service? = .qq
+    public static let service: String? = "QQMusic"
 
     public func lyricsSearchPublisher(request: LyricsSearchRequest) -> AnyPublisher<LyricsToken, Never> {
         let parameter = ["key": request.searchTerm.description]

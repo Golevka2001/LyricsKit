@@ -32,7 +32,7 @@ extension LyricsProviders.NetEase: _LyricsProvider {
         let value: NetEaseResponseSearchResult.Result.Song
     }
     
-    public static let service: LyricsProviders.Service? = .netease
+    public static let service: String? = "NetEase"
     
     public func lyricsSearchPublisher(request: LyricsSearchRequest) -> AnyPublisher<LyricsToken, Never> {
         let parameter: [String: Any] = [
