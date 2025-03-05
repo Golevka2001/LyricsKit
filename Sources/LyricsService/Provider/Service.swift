@@ -37,8 +37,6 @@ extension LyricsProviders {
                 .netease,
                 .qq,
                 .kugou,
-                .gecimi,
-                .syair,
                 .lrclib,
             ]
         }

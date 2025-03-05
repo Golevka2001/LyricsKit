@@ -8,7 +8,7 @@ let searchReq = LyricsSearchRequest(searchTerm: .info(title: testSong, artist: t
 
 final class LyricsKitTests: XCTestCase {
     
-    func _test(provider: LyricsProvider) {
+    private func test(provider: LyricsProvider) {
         var searchResultEx: XCTestExpectation? = expectation(description: "Search result: \(provider)")
         let token = provider.lyricsPublisher(request: searchReq).sink { lrc in
             print(lrc)
@@ -19,8 +19,10 @@ final class LyricsKitTests: XCTestCase {
         token.cancel()
     }
     
-    func testManager() {
-        _test(provider: LyricsProviders.QQMusic())
+    func testQQMusicProvider() {
+        test(provider: LyricsProviders.QQMusic())
     }
+    
+    
     
 }

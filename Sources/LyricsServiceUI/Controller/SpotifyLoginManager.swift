@@ -151,6 +151,9 @@ public final class SpotifyLoginManager: NSObject, @unchecked Sendable {
 
         await secureStorage.setCookie(cookie)
         try await requestAccessToken()
+        await MainActor.run {
+            loginWindowController.close()
+        }
     }
 
     public func logout() async {
@@ -178,7 +181,6 @@ public final class SpotifyLoginWindowController: NSWindowController {
         let window = NSWindow(contentRect: .init(x: 0, y: 0, width: 800, height: 600), styleMask: [.titled, .closable], backing: .buffered, defer: false)
         window.title = "Spotify Login"
         window.setContentSize(NSSize(width: 800, height: 600))
-        window.center()
         self.window = window
     }
 
@@ -188,6 +190,7 @@ public final class SpotifyLoginWindowController: NSWindowController {
 
     public override func windowDidLoad() {
         contentViewController = loginViewController
+        window?.center()
     }
 }
 
@@ -212,11 +215,13 @@ public final class SpotifyLoginViewController: NSViewController {
 
     public override func loadView() {
         view = webView
+        view.frame = .init(x: 0, y: 0, width: 800, height: 600)
     }
 
     public override func viewDidLoad() {
         super.viewDidLoad()
         gotoLogin()
+        webView.navigationDelegate = self
     }
 
     public func gotoLogin() {
@@ -239,6 +244,9 @@ extension SpotifyLoginViewController: WKNavigationDelegate {
                     }
                 }
             }
+        }
+        if url.absoluteString.starts(with: "https://accounts.google.com/") {
+            webView.customUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.4 Safari/605.1.15"
         }
     }
 }
