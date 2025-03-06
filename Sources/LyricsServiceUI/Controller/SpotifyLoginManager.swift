@@ -1,11 +1,18 @@
 import AppKit
 import WebKit
 import KeychainAccess
+import Schedule
+
+private typealias Task = _Concurrency.Task
 
 struct SpotifyAccessToken: Codable {
     let accessToken: String
     let accessTokenExpirationTimestampMs: TimeInterval
     let isAnonymous: Bool
+
+    var expirationDate: Date {
+        return Date(timeIntervalSince1970: accessTokenExpirationTimestampMs / 1000)
+    }
 
     static func accessToken(forCookie cookie: String) async throws -> Self {
         let url = URL(string: "https://open.spotify.com/get_access_token?reason=transport&productType=web_player")!
@@ -92,8 +99,8 @@ public final class SpotifyLoginManager: NSObject, @unchecked Sendable {
     }
 
     private let secureStorage = SecureStorage()
-
-    private var activeTask: Task<Void, Never>?
+    
+    private var refreshTask: Schedule.Task?
 
     public var isLogin: Bool {
         get async {
@@ -116,23 +123,33 @@ public final class SpotifyLoginManager: NSObject, @unchecked Sendable {
     private override init() {
         super.init()
 
-        self.activeTask = Task {
-            if let accessToken = await secureStorage.getAccessToken(),
-               accessToken.accessTokenExpirationTimestampMs <= Date().timeIntervalSince1970 * 1000,
-               await secureStorage.getCookie() != nil {
-                try? await self.requestAccessToken()
+        Task {
+            if let accessToken = await secureStorage.getAccessToken() {
+                if accessToken.expirationDate <= Date(), await secureStorage.getCookie() != nil {
+                    try await self.requestAccessToken()
+                } else {
+                    self.scheduleAccessTokenRefresh(accessToken)
+                }
             }
         }
     }
 
-    deinit {
-        activeTask?.cancel()
+
+    private func scheduleAccessTokenRefresh(_ accessToken: SpotifyAccessToken) {
+        refreshTask?.cancel()
+        refreshTask = Plan.at(accessToken.expirationDate).do(queue: .global()) { [weak self] in
+            guard let self else { return }
+            Task {
+                try await self.requestAccessToken()
+            }
+        }
     }
 
     public func requestAccessToken() async throws {
         guard let cookie = await secureStorage.getCookie() else { return }
         let accessToken = try await SpotifyAccessToken.accessToken(forCookie: cookie)
         await secureStorage.setAccessToken(accessToken)
+        scheduleAccessTokenRefresh(accessToken)
     }
 
     public func login() async throws {

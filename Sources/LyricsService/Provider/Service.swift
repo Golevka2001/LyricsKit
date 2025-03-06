@@ -52,6 +52,7 @@ extension LyricsProviders.Service {
         case .kugou:    return LyricsProviders.Kugou()
         case .gecimi:   return LyricsProviders.Gecimi()
         case .spotify(let accessToken): return LyricsProviders.Spotify(accessToken: accessToken)
+        case .lrclib:   return LyricsProviders.LRCLIB()
         #if canImport(Darwin)
         case .syair:    return LyricsProviders.Syair()
         #endif

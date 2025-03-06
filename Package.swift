@@ -1,4 +1,4 @@
-// swift-tools-version:5.2
+// swift-tools-version:5.10
 
 import PackageDescription
 
@@ -6,31 +6,41 @@ let package = Package(
     name: "LyricsKit",
     platforms: [
         .macOS(.v10_15),
-        .iOS(.minimalToolChainSupported),
-        .tvOS(.v9),
-        .watchOS(.v2),
+        .iOS(.v13),
+        .tvOS(.v13),
+        .watchOS(.v6),
     ],
     products: [
         .library(
             name: "LyricsKit",
-            targets: ["LyricsCore", "LyricsService", "LyricsServiceUI"]),
+            targets: ["LyricsCore", "LyricsService", "LyricsServiceUI"]
+        ),
     ],
     dependencies: [
-        .package(url: "https://github.com/MxIris-LyricsX-Project/CXShim", .branchItem("master")),
-        .package(url: "https://github.com/MxIris-LyricsX-Project/CXExtensions", .branchItem("master")),
+        .package(url: "https://github.com/MxIris-LyricsX-Project/CXShim", branch: "master"),
+        .package(url: "https://github.com/MxIris-LyricsX-Project/CXExtensions", branch: "master"),
         .package(url: "https://github.com/ddddxxx/Regex", from: "1.0.1"),
-        .package(url: "https://github.com/MxIris-Library-Forks/SwiftCF", .branchItem("master")),
-        .package(name: "Gzip", url: "https://github.com/1024jp/GzipSwift", from: "5.0.0"),
+        .package(url: "https://github.com/MxIris-Library-Forks/SwiftCF", branch: "master"),
+        .package(url: "https://github.com/1024jp/GzipSwift", from: "5.0.0"),
         .package(url: "https://github.com/kishikawakatsumi/KeychainAccess", .upToNextMajor(from: "4.0.0")),
+        .package(url: "https://github.com/MxIris-Library-Forks/Schedule", branch: "master"),
     ],
     targets: [
         .target(
             name: "LyricsCore",
-            dependencies: ["Regex", "SwiftCF"]),
+            dependencies: [
+                .product(name: "Regex", package: "Regex"),
+                .product(name: "SwiftCF", package: "SwiftCF"),
+            ]
+        ),
         .target(
             name: "LyricsService",
             dependencies: [
-                "LyricsCore", "CXShim", "CXExtensions", "Regex", "Gzip",
+                "LyricsCore",
+                .product(name: "CXShim", package: "CXShim"),
+                .product(name: "CXExtensions", package: "CXExtensions"),
+                .product(name: "Regex", package: "Regex"),
+                .product(name: "Gzip", package: "GzipSwift"),
             ]
         ),
         .target(
@@ -38,46 +48,41 @@ let package = Package(
             dependencies: [
                 "LyricsCore",
                 "LyricsService",
-                "KeychainAccess",
+                .product(name: "KeychainAccess", package: "KeychainAccess"),
+                .product(name: "Schedule", package: "Schedule"),
             ]
         ),
         .testTarget(
             name: "LyricsKitTests",
-            dependencies: ["LyricsCore", "LyricsService"]),
+            dependencies: [
+                "LyricsCore",
+                "LyricsService",
+            ]
+        ),
     ]
 )
 
-extension SupportedPlatform.IOSVersion {
-    #if compiler(>=5.3)
-    static var minimalToolChainSupported = SupportedPlatform.IOSVersion.v9
-    #else
-    static var minimalToolChainSupported = SupportedPlatform.IOSVersion.v8
-    #endif
-}
-
 enum CombineImplementation {
-    
     case combine
     case combineX
     case openCombine
-    
+
     static var `default`: CombineImplementation {
         return .combineX
     }
-    
+
     init?(_ description: String) {
         let desc = description.lowercased().filter(\.isLetter)
         switch desc {
-        case "combine":     self = .combine
-        case "combinex":    self = .combineX
+        case "combine": self = .combine
+        case "combinex": self = .combineX
         case "opencombine": self = .openCombine
-        default:            return nil
+        default: return nil
         }
     }
 }
 
 extension ProcessInfo {
-
     var combineImplementation: CombineImplementation {
         return environment["CX_COMBINE_IMPLEMENTATION"].flatMap(CombineImplementation.init) ?? .default
     }

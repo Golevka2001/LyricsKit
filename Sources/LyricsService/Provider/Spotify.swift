@@ -266,11 +266,7 @@ extension LyricsProviders.Spotify {
                 lyrics.metadata.serviceToken = token.id
                 return lyrics
             }
-//            .ignoreError()
-            .catch { error in
-                print(error)
-                return Empty<Lyrics, Never>()
-            }
+            .ignoreError()
             .eraseToAnyPublisher()
     }
 }
