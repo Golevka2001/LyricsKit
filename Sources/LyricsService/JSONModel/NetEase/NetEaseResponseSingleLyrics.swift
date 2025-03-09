@@ -14,7 +14,7 @@ struct NetEaseResponseSingleLyrics: Decodable {
     let klyric: Lyric?
     let tlyric: Lyric?
     let lyricUser: User?
-    
+    let yrc: Lyric?
     /*
     let sgc: Bool
     let sfy: Bool

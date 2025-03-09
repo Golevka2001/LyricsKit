@@ -26,6 +26,8 @@ let krcLineRegex = Regex(#"^\[(\d+),(\d+)\](.*)"#, options: .anchorsMatchLines)
 
 let qrcLineRegex = Regex(#"^\[(\d+),(\d+)\](.*)"#, options: [.anchorsMatchLines])
 
+let netEaseYrcInlineTagRegex = Regex(#"\((\d+),(\d+),0\)([^(]*)"#)
+
 let netEaseInlineTagRegex = Regex(#"\(0,(\d+)\)([^(]+)(\(0,1\) )?"#)
 
 let kugouInlineTagRegex = Regex(#"<(\d+),(\d+),0>([^<]*)"#)

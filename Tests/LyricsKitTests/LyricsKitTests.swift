@@ -25,4 +25,12 @@ final class LyricsKitTests: XCTestCase {
     func testLRCLIBProvider() {
         test(provider: LyricsProviders.LRCLIB())
     }
+    
+    func testKugouProvider() {
+        test(provider: LyricsProviders.Kugou())
+    }
+    
+    func testNetEaseProvider() {
+        test(provider: LyricsProviders.NetEase())
+    }
 }
