@@ -24,6 +24,7 @@ let package = Package(
         .package(url: "https://github.com/1024jp/GzipSwift", from: "5.0.0"),
         .package(url: "https://github.com/kishikawakatsumi/KeychainAccess", .upToNextMajor(from: "4.0.0")),
         .package(url: "https://github.com/MxIris-Library-Forks/Schedule", branch: "master"),
+        .package(url: "https://github.com/lachlanbell/SwiftOTP", from: "3.0.2"),
     ],
     targets: [
         .target(
@@ -50,6 +51,7 @@ let package = Package(
                 "LyricsService",
                 .product(name: "KeychainAccess", package: "KeychainAccess"),
                 .product(name: "Schedule", package: "Schedule"),
+                .product(name: "SwiftOTP", package: "SwiftOTP"),
             ]
         ),
         .testTarget(

@@ -2,8 +2,38 @@ import AppKit
 import WebKit
 import KeychainAccess
 import Schedule
+import SwiftOTP
 
 private typealias Task = _Concurrency.Task
+
+private enum TOTPGenerator {
+    static func generate(serverTimeSeconds: Int) -> String? {
+        let secretCipher = [12, 56, 76, 33, 88, 44, 88, 33, 78, 78, 11, 66, 22, 22, 55, 69, 54]
+
+        var processed = [UInt8]()
+        for (i, byte) in secretCipher.enumerated() {
+            processed.append(UInt8(byte ^ (i % 33 + 9)))
+        }
+
+        let processedStr = processed.map { String($0) }.joined()
+
+        guard let utf8Bytes = processedStr.data(using: .utf8) else {
+            return nil
+        }
+
+        let secretBase32 = utf8Bytes.base32EncodedString
+
+        guard let secretData = base32DecodeToData(secretBase32) else {
+            return nil
+        }
+
+        guard let totp = TOTP(secret: secretData, digits: 6, timeInterval: 30, algorithm: .sha1) else {
+            return nil
+        }
+
+        return totp.generate(secondsPast1970: serverTimeSeconds)
+    }
+}
 
 struct SpotifyAccessToken: Codable {
     let accessToken: String
@@ -15,7 +45,23 @@ struct SpotifyAccessToken: Codable {
     }
 
     static func accessToken(forCookie cookie: String) async throws -> Self {
-        let url = URL(string: "https://open.spotify.com/get_access_token?reason=transport&productType=web_player")!
+        struct ServerTime: Codable {
+            var serverTime: Int
+        }
+
+        enum Error: Swift.Error {
+            case totpGenerationFailed
+        }
+
+        let serverTimeRequest = URLRequest(url: .init(string: "https://open.spotify.com/server-time")!)
+        let serverTimeData = try await URLSession.shared.data(for: serverTimeRequest).0
+        let serverTime = try JSONDecoder().decode(ServerTime.self, from: serverTimeData).serverTime
+
+        guard let totp = TOTPGenerator.generate(serverTimeSeconds: serverTime) else {
+            throw Error.totpGenerationFailed
+        }
+
+        let url = URL(string: "https://open.spotify.com/get_access_token?reason=transport&productType=web_player&totpVer=5&ts=\(Int(Date().timeIntervalSince1970))&totp=\(totp)")!
         var request = URLRequest(url: url)
         request.setValue("sp_dc=\(cookie)", forHTTPHeaderField: "Cookie")
         let accessTokenData = try await URLSession.shared.data(for: request).0
@@ -99,7 +145,7 @@ public final class SpotifyLoginManager: NSObject, @unchecked Sendable {
     }
 
     private let secureStorage = SecureStorage()
-    
+
     private var refreshTask: Schedule.Task?
 
     public var isLogin: Bool {
@@ -133,7 +179,6 @@ public final class SpotifyLoginManager: NSObject, @unchecked Sendable {
             }
         }
     }
-
 
     private func scheduleAccessTokenRefresh(_ accessToken: SpotifyAccessToken) {
         refreshTask?.cancel()
