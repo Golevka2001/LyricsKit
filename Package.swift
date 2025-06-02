@@ -5,15 +5,12 @@ import PackageDescription
 let package = Package(
     name: "LyricsKit",
     platforms: [
-        .macOS(.v10_15),
-        .iOS(.v13),
-        .tvOS(.v13),
-        .watchOS(.v6),
+        .macOS(.v13),
     ],
     products: [
         .library(
             name: "LyricsKit",
-            targets: ["LyricsCore", "LyricsService", "LyricsServiceUI"]
+            targets: ["LyricsKit"]
         ),
     ],
     dependencies: [
@@ -27,6 +24,14 @@ let package = Package(
         .package(url: "https://github.com/lachlanbell/SwiftOTP", from: "3.0.2"),
     ],
     targets: [
+        .target(
+            name: "LyricsKit",
+            dependencies: [
+                "LyricsCore",
+                "LyricsService",
+                "LyricsServiceUI",
+            ]
+        ),
         .target(
             name: "LyricsCore",
             dependencies: [

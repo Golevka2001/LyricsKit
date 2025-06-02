@@ -43,3 +43,5 @@ let ttpodXtrcInlineTagRegex = Regex(#"<(\d+)>([^<\r\n]*)"#)
 let syairSearchResultRegex = Regex(#"<div class="title"><a href="([^"]+)">"#)
 
 let syairLyricsContentRegex = Regex(#"<div class="entry">(.+?)<div"#, options: .dotMatchesLineSeparators)
+
+
