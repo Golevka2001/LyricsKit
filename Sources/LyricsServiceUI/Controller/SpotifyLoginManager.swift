@@ -7,12 +7,12 @@ import SwiftOTP
 private typealias Task = _Concurrency.Task
 
 private enum TOTPGenerator {
-    static func generate(serverTimeSeconds: Int) -> String? {
-        let secretCipher = [12, 56, 76, 33, 88, 44, 88, 33, 78, 78, 11, 66, 22, 22, 55, 69, 54]
+    static func generate(secretCipher: [UInt8], serverTimeSeconds: Int) -> String? {
+//        let secretCipher = [12, 56, 76, 33, 88, 44, 88, 33, 78, 78, 11, 66, 22, 22, 55, 69, 54]
 
         var processed = [UInt8]()
         for (i, byte) in secretCipher.enumerated() {
-            processed.append(UInt8(byte ^ (i % 33 + 9)))
+            processed.append(UInt8(byte ^ UInt8(i % 33 + 9)))
         }
 
         let processedStr = processed.map { String($0) }.joined()
@@ -48,23 +48,42 @@ struct SpotifyAccessToken: Codable {
         struct ServerTime: Codable {
             var serverTime: Int
         }
-
+        struct SecretKeyEntry: Codable {
+            let version: Int
+            let secret: String
+        }
         enum Error: Swift.Error {
             case totpGenerationFailed
         }
-
-        let serverTimeRequest = URLRequest(url: .init(string: "https://open.spotify.com/server-time")!)
+        let secretKeyURL = URL(string: "https://raw.githubusercontent.com/Thereallo1026/spotify-secrets/refs/heads/main/secrets/secrets.json")!
+        let serverTimeRequest = URLRequest(url: .init(string: "https://open.spotify.com/api/server-time")!)
         let serverTimeData = try await URLSession.shared.data(for: serverTimeRequest).0
         let serverTime = try JSONDecoder().decode(ServerTime.self, from: serverTimeData).serverTime
-
-        guard let totp = TOTPGenerator.generate(serverTimeSeconds: serverTime) else {
+        let (data, _) = try await URLSession.shared.data(from: secretKeyURL)
+        let secretEntries = try JSONDecoder().decode([SecretKeyEntry].self, from: data)
+        guard let lastEntry = secretEntries.last else {
             throw Error.totpGenerationFailed
         }
+        guard let totp = TOTPGenerator.generate(secretCipher: .init(lastEntry.secret.utf8), serverTimeSeconds: serverTime) else {
+            throw Error.totpGenerationFailed
+        }
+        let tokenURL = URL(string: "https://open.spotify.com/api/token")!
+        let params: [String: String] = [
+            "reason": "transport",
+            "productType": "web-player",
+            "totp": totp,
+            "totpVer": lastEntry.version.description,
+            "ts": String(Int(Date().timeIntervalSince1970)),
+        ]
+        var components = URLComponents(url: tokenURL, resolvingAgainstBaseURL: false)!
+        components.queryItems = params.map { URLQueryItem(name: $0.key, value: $0.value) }
 
-        let url = URL(string: "https://open.spotify.com/get_access_token?reason=transport&productType=web_player&totpVer=5&ts=\(Int(Date().timeIntervalSince1970))&totp=\(totp)")!
-        var request = URLRequest(url: url)
+        var request = URLRequest(url: components.url!)
+        request.httpMethod = "GET"
         request.setValue("sp_dc=\(cookie)", forHTTPHeaderField: "Cookie")
+        request.setValue("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36", forHTTPHeaderField: "User-Agent")
         let accessTokenData = try await URLSession.shared.data(for: request).0
+        try print(JSONSerialization.jsonObject(with: accessTokenData))
         return try JSONDecoder().decode(SpotifyAccessToken.self, from: accessTokenData)
     }
 }
@@ -214,7 +233,11 @@ public final class SpotifyLoginManager: NSObject, @unchecked Sendable {
         }
 
         await secureStorage.setCookie(cookie)
-        try await requestAccessToken()
+        do {
+            try await requestAccessToken()
+        } catch {
+            print(error)
+        }
         await MainActor.run {
             loginWindowController.close()
         }
