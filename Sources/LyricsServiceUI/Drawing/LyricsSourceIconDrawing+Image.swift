@@ -20,8 +20,6 @@ private extension LyricsProviders.Service {
         switch self {
         case .netease:
             return LyricsSourceIconDrawing.drawNetEaseMusic
-        case .gecimi:
-            return LyricsSourceIconDrawing.drawGecimi
         case .kugou:
             return LyricsSourceIconDrawing.drawKugou
         case .qq:

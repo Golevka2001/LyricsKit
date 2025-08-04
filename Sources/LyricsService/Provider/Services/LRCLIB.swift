@@ -4,27 +4,16 @@ import CXShim
 import CXExtensions
 import Regex
 
-// https://lrclib.net/api/search
 #if canImport(FoundationNetworking)
 import FoundationNetworking
 #endif
+
+// https://lrclib.net/api/search
 
 extension LyricsProviders {
     public final class LRCLIB {
         public init() {}
     }
-}
-
-public struct LRCLIBResponse: Codable {
-    let id: Int
-    let name: String
-    let trackName: String
-    let artistName: String
-    let albumName: String
-    let duration: Double
-    let instrumental: Bool
-    let plainLyrics: String?
-    let syncedLyrics: String?
 }
 
 extension LyricsProviders.LRCLIB: _LyricsProvider {

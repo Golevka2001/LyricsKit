@@ -1,9 +1,9 @@
 import XCTest
 @testable import LyricsService
 
-let testSong = "Good Time"
-let testArtist = "Owl City"
-let duration = 305.0
+let testSong = "Over"
+let testArtist = "yihuik苡慧/白静晨"
+let duration = 155.0
 let searchReq = LyricsSearchRequest(searchTerm: .info(title: testSong, artist: testArtist), duration: duration)
 
 final class LyricsKitTests: XCTestCase {

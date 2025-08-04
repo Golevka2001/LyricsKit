@@ -205,8 +205,10 @@ public final class SpotifyLoginManager: NSObject, @unchecked Sendable {
 
         let cookie = try await withCheckedThrowingContinuation { continuation in
             Task { @MainActor in
-                loginWindowController.loginViewController.didLogin = { cookie in
+                loginWindowController.loginViewController.didLogin = { [weak self] cookie in
                     continuation.resume(returning: cookie)
+                    guard let self else { return }
+                    loginWindowController.loginViewController.didLogin = nil
                 }
             }
         }

@@ -76,7 +76,6 @@ extension Lyrics {
             
             var lineContent = ""
             var attachment = LyricsLine.Attachments.InlineTimeTag(tags: [.init(index: 0, time: 0)], duration: duration)
-            var dt = 0.0
             netEaseYrcInlineTagRegex.matches(in: content, range: match[3]!.range).forEach { m in
                 let t1 = Int(m[1]!.content)! - Int(timeTagStr)!
                 let t2 = Int(m[2]!.content)!

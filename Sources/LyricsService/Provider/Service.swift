@@ -15,8 +15,6 @@ extension LyricsProviders {
         case netease
         case qq
         case kugou
-        case gecimi
-        case syair
         case lrclib
         case spotify(accessToken: String)
 
@@ -25,8 +23,6 @@ extension LyricsProviders {
             case .netease: return "Netease"
             case .qq: return "QQMusic"
             case .kugou: return "Kugou"
-            case .gecimi: return "Gecimi"
-            case .syair: return "Syair"
             case .lrclib: return "LRCLIB"
             case .spotify: return "Spotify"
             }
@@ -50,13 +46,9 @@ extension LyricsProviders.Service {
         case .netease:  return LyricsProviders.NetEase()
         case .qq:       return LyricsProviders.QQMusic()
         case .kugou:    return LyricsProviders.Kugou()
-        case .gecimi:   return LyricsProviders.Gecimi()
         case .spotify(let accessToken): return LyricsProviders.Spotify(accessToken: accessToken)
         case .lrclib:   return LyricsProviders.LRCLIB()
-        #if canImport(Darwin)
-        case .syair:    return LyricsProviders.Syair()
-        #endif
-        default:        return LyricsProviders.Unsupported()
+//        default:        return LyricsProviders.Unsupported()
         }
     }
 }

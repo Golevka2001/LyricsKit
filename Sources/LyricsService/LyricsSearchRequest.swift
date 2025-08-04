@@ -44,7 +44,7 @@ extension LyricsSearchRequest.SearchTerm: CustomStringConvertible {
         switch self {
         case .keyword(let string):
             return string
-        case .info(let title, let artist):
+        case .info(let title, _):
             return title
         }
     }
