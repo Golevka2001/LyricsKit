@@ -1,201 +1,93 @@
 import AppKit
 import WebKit
-import KeychainAccess
 import Schedule
-import SwiftOTP
 
 private typealias Task = _Concurrency.Task
-
-private enum TOTPGenerator {
-    static func generate(secretCipher: [UInt8], serverTimeSeconds: Int) -> String? {
-//        let secretCipher = [12, 56, 76, 33, 88, 44, 88, 33, 78, 78, 11, 66, 22, 22, 55, 69, 54]
-
-        var processed = [UInt8]()
-        for (i, byte) in secretCipher.enumerated() {
-            processed.append(UInt8(byte ^ UInt8(i % 33 + 9)))
-        }
-
-        let processedStr = processed.map { String($0) }.joined()
-
-        guard let utf8Bytes = processedStr.data(using: .utf8) else {
-            return nil
-        }
-
-        let secretBase32 = utf8Bytes.base32EncodedString
-
-        guard let secretData = base32DecodeToData(secretBase32) else {
-            return nil
-        }
-
-        guard let totp = TOTP(secret: secretData, digits: 6, timeInterval: 30, algorithm: .sha1) else {
-            return nil
-        }
-
-        return totp.generate(secondsPast1970: serverTimeSeconds)
-    }
-}
-
-struct SpotifyAccessToken: Codable {
-    let accessToken: String
-    let accessTokenExpirationTimestampMs: TimeInterval
-    let isAnonymous: Bool
-
-    var expirationDate: Date {
-        return Date(timeIntervalSince1970: accessTokenExpirationTimestampMs / 1000)
-    }
-
-    static func accessToken(forCookie cookie: String) async throws -> Self {
-        struct ServerTime: Codable {
-            var serverTime: Int
-        }
-        struct SecretKeyEntry: Codable {
-            let version: Int
-            let secret: String
-        }
-        enum Error: Swift.Error {
-            case totpGenerationFailed
-        }
-        let secretKeyURL = URL(string: "https://raw.githubusercontent.com/Thereallo1026/spotify-secrets/refs/heads/main/secrets/secrets.json")!
-        let serverTimeRequest = URLRequest(url: .init(string: "https://open.spotify.com/api/server-time")!)
-        let serverTimeData = try await URLSession.shared.data(for: serverTimeRequest).0
-        let serverTime = try JSONDecoder().decode(ServerTime.self, from: serverTimeData).serverTime
-        let (data, _) = try await URLSession.shared.data(from: secretKeyURL)
-        let secretEntries = try JSONDecoder().decode([SecretKeyEntry].self, from: data)
-        guard let lastEntry = secretEntries.last else {
-            throw Error.totpGenerationFailed
-        }
-        guard let totp = TOTPGenerator.generate(secretCipher: .init(lastEntry.secret.utf8), serverTimeSeconds: serverTime) else {
-            throw Error.totpGenerationFailed
-        }
-        let tokenURL = URL(string: "https://open.spotify.com/api/token")!
-        let params: [String: String] = [
-            "reason": "transport",
-            "productType": "web-player",
-            "totp": totp,
-            "totpVer": lastEntry.version.description,
-            "ts": String(Int(Date().timeIntervalSince1970)),
-        ]
-        var components = URLComponents(url: tokenURL, resolvingAgainstBaseURL: false)!
-        components.queryItems = params.map { URLQueryItem(name: $0.key, value: $0.value) }
-
-        var request = URLRequest(url: components.url!)
-        request.httpMethod = "GET"
-        request.setValue("sp_dc=\(cookie)", forHTTPHeaderField: "Cookie")
-        request.setValue("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36", forHTTPHeaderField: "User-Agent")
-        let accessTokenData = try await URLSession.shared.data(for: request).0
-        try print(JSONSerialization.jsonObject(with: accessTokenData))
-        return try JSONDecoder().decode(SpotifyAccessToken.self, from: accessTokenData)
-    }
-}
-
-@propertyWrapper
-public struct Keychain<T: Codable> {
-    private let keychain: KeychainAccess.Keychain
-
-    public var wrappedValue: T {
-        set {
-            do {
-                keychain[data: key] = try JSONEncoder().encode(newValue)
-                _cacheWrappedValue = newValue
-            } catch {
-                print(error)
-            }
-        }
-        mutating get {
-            if let _cacheWrappedValue {
-                return _cacheWrappedValue
-            } else {
-                if let data = keychain[data: key],
-                   let value = try? JSONDecoder().decode(T.self, from: data) {
-                    _cacheWrappedValue = value
-                    return value
-                } else {
-                    return defaultValue
-                }
-            }
-        }
-    }
-
-    private var _cacheWrappedValue: T?
-
-    private let defaultValue: T
-
-    private let key: String
-
-    public init(key: String, service: String, defaultValue: T) {
-        self.keychain = .init(service: service).synchronizable(true)
-        self.key = key
-        self.defaultValue = defaultValue
-    }
-}
+private typealias ScheduleTask = Schedule.Task
 
 public final class SpotifyLoginManager: NSObject, @unchecked Sendable {
     public static let shared = SpotifyLoginManager()
 
-    /// 确保UI相关操作在主线程
     @MainActor
     private let loginWindowController = SpotifyLoginWindowController()
 
     private static let keychainDomain = "com.JH.LyricsKit.SpotifyLoginManager"
 
-    /// 使用actor保护状态访问
     private actor SecureStorage {
         @Keychain(key: "cookie", service: SpotifyLoginManager.keychainDomain, defaultValue: nil)
         var cookie: String?
 
-        @Keychain(key: "accessToken", service: SpotifyLoginManager.keychainDomain, defaultValue: nil)
-        var accessToken: SpotifyAccessToken?
+        @Keychain(key: "lyricsAccessToken", service: SpotifyLoginManager.keychainDomain, defaultValue: nil)
+        var lyricsAccessToken: SpotifyAccessToken?
 
-        func getCookie() -> String? {
-            return cookie
-        }
+        @Keychain(key: "searchAccessToken", service: SpotifyLoginManager.keychainDomain, defaultValue: nil)
+        var searchAccessToken: SpotifyAccessToken?
 
         func setCookie(_ newCookie: String?) {
             cookie = newCookie
         }
 
-        func getAccessToken() -> SpotifyAccessToken? {
-            return accessToken
+        func setLyricsAccessToken(_ token: SpotifyAccessToken?) {
+            lyricsAccessToken = token
         }
 
-        func setAccessToken(_ token: SpotifyAccessToken?) {
-            accessToken = token
+        func setSearchAccessToken(_ token: SpotifyAccessToken?) {
+            searchAccessToken = token
         }
     }
 
     private let secureStorage = SecureStorage()
 
-    private var refreshTask: Schedule.Task?
+    private var refreshTask: ScheduleTask?
 
     public var isLogin: Bool {
         get async {
-            return await secureStorage.getCookie() != nil
+            return await secureStorage.cookie != nil
         }
     }
 
     public var isAccessible: Bool {
         get async {
-            return await secureStorage.getAccessToken() != nil
+            let lyricsToken = await secureStorage.lyricsAccessToken
+            let searchToken = await secureStorage.searchAccessToken
+            return lyricsToken != nil && searchToken != nil
         }
     }
 
-    public var accessTokenString: String? {
+    public var lyricsAccessTokenString: String? {
         get async {
-            return await secureStorage.getAccessToken()?.accessToken
+            return await secureStorage.lyricsAccessToken?.accessToken
         }
     }
+
+    public var searchAccessTokenString: String? {
+        get async {
+            return await secureStorage.searchAccessToken?.accessToken
+        }
+    }
+
+    public var accessTokenChanged: (() async throws -> Void)?
 
     private override init() {
         super.init()
 
         Task {
-            if let accessToken = await secureStorage.getAccessToken() {
-                if accessToken.expirationDate <= Date(), await secureStorage.getCookie() != nil {
-                    try await self.requestAccessToken()
-                } else {
-                    self.scheduleAccessTokenRefresh(accessToken)
-                }
-            }
+            try await self.requestAccessToken()
+//            if let accessToken = await secureStorage.lyricsAccessToken {
+//                if accessToken.expirationDate <= Date(), await secureStorage.cookie != nil {
+//                    try await self.requestAccessToken()
+//                } else {
+//                    self.scheduleAccessTokenRefresh(accessToken)
+//                }
+//            }
+//            
+//            if let accessToken = await secureStorage.searchAccessToken {
+//                if accessToken.expirationDate <= Date(), await secureStorage.cookie != nil {
+//                    try await self.requestAccessToken()
+//                } else {
+//                    self.scheduleAccessTokenRefresh(accessToken)
+//                }
+//            }
         }
     }
 
@@ -210,10 +102,14 @@ public final class SpotifyLoginManager: NSObject, @unchecked Sendable {
     }
 
     public func requestAccessToken() async throws {
-        guard let cookie = await secureStorage.getCookie() else { return }
-        let accessToken = try await SpotifyAccessToken.accessToken(forCookie: cookie)
-        await secureStorage.setAccessToken(accessToken)
-        scheduleAccessTokenRefresh(accessToken)
+        guard let cookie = await secureStorage.cookie else { return }
+        let lyricsAccessToken = try await SpotifyAccessToken.lyricsAccessToken(forCookie: cookie)
+        await secureStorage.setLyricsAccessToken(lyricsAccessToken)
+        let searchAccessToken = try await SpotifyAccessToken.searchAccessToken(forCookie: cookie)
+        await secureStorage.setSearchAccessToken(searchAccessToken)
+        scheduleAccessTokenRefresh(lyricsAccessToken)
+        scheduleAccessTokenRefresh(searchAccessToken)
+        try await accessTokenChanged?()
     }
 
     public func login() async throws {
@@ -233,11 +129,13 @@ public final class SpotifyLoginManager: NSObject, @unchecked Sendable {
         }
 
         await secureStorage.setCookie(cookie)
+        
         do {
             try await requestAccessToken()
         } catch {
             print(error)
         }
+        
         await MainActor.run {
             loginWindowController.close()
         }
@@ -245,110 +143,12 @@ public final class SpotifyLoginManager: NSObject, @unchecked Sendable {
 
     public func logout() async {
         await secureStorage.setCookie(nil)
-        await secureStorage.setAccessToken(nil)
+        await secureStorage.setLyricsAccessToken(nil)
+        await secureStorage.setSearchAccessToken(nil)
 
         await MainActor.run {
             loginWindowController.showWindow(nil)
             loginWindowController.loginViewController.gotoLogout()
         }
     }
-}
-
-public final class SpotifyLoginWindowController: NSWindowController {
-    public init() {
-        super.init(window: nil)
-    }
-
-    @available(*, unavailable)
-    public required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    public override func loadWindow() {
-        let window = NSWindow(contentRect: .init(x: 0, y: 0, width: 800, height: 600), styleMask: [.titled, .closable], backing: .buffered, defer: false)
-        window.title = "Spotify Login"
-        window.setContentSize(NSSize(width: 800, height: 600))
-        self.window = window
-    }
-
-    lazy var loginViewController = SpotifyLoginViewController()
-
-    public override var windowNibName: NSNib.Name? { "" }
-
-    public override func windowDidLoad() {
-        contentViewController = loginViewController
-        window?.center()
-    }
-}
-
-public final class SpotifyLoginViewController: NSViewController {
-    private let webView: WKWebView
-
-    private static let loginURL = URL(string: "https://accounts.spotify.com/en/login?continue=https%3A%2F%2Fopen.spotify.com%2F")!
-
-    private static let logoutURL = URL(string: "https://www.spotify.com/logout/")!
-
-    public var didLogin: ((String) -> Void)?
-
-    public init() {
-        self.webView = WKWebView(frame: .zero, configuration: .init())
-        super.init(nibName: nil, bundle: nil)
-    }
-
-    @available(*, unavailable)
-    public required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    public override func loadView() {
-        view = webView
-        view.frame = .init(x: 0, y: 0, width: 800, height: 600)
-    }
-
-    public override func viewDidLoad() {
-        super.viewDidLoad()
-        gotoLogin()
-        webView.navigationDelegate = self
-    }
-
-    public func gotoLogin() {
-        webView.load(.init(url: Self.loginURL))
-    }
-
-    public func gotoLogout() {
-        webView.load(.init(url: Self.logoutURL))
-    }
-}
-
-extension SpotifyLoginViewController: WKNavigationDelegate {
-    public func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
-        guard let url = webView.url else { return }
-        if url.absoluteString.starts(with: "https://open.spotify.com") {
-            Task.detached {
-                if let cookie = await WKWebsiteDataStore.default().spotifyCookie() {
-                    await MainActor.run {
-                        self.didLogin?(cookie)
-                    }
-                }
-            }
-        }
-        if url.absoluteString.starts(with: "https://accounts.google.com/") {
-            webView.customUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.4 Safari/605.1.15"
-        }
-    }
-}
-
-extension WKWebsiteDataStore {
-    public func spotifyCookie() async -> String? {
-        let cookies = await httpCookieStore.allCookies()
-        if let temporaryCookie = cookies.first(where: { $0.name == "sp_dc" }) {
-            return temporaryCookie.value
-        }
-        return nil
-    }
-}
-
-@available(macOS 14.0, *)
-#Preview {
-    SpotifyLoginViewController()
 }

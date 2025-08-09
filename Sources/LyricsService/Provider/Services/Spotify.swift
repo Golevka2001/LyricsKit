@@ -8,19 +8,14 @@ extension LyricsProviders {
     final class Spotify: _LyricsProvider {
         typealias LyricsToken = SpotifyResponseSearchResult.Track.Item
 
-        let accessToken: String
+        let searchAccessToken: String
 
-        init(accessToken: String) {
-            self.accessToken = accessToken
+        let lyricsAccessToken: String
+
+        init(searchAccessToken: String, lyricsAccessToken: String) {
+            self.searchAccessToken = searchAccessToken
+            self.lyricsAccessToken = lyricsAccessToken
         }
-
-        static let fakeSpotifyUserAgentconfig: URLSessionConfiguration = {
-            let fakeSpotifyUserAgentconfig = URLSessionConfiguration.default
-            fakeSpotifyUserAgentconfig.httpAdditionalHeaders = ["User-Agent": "Spotify/121000760 Win32/0 (PC laptop)"]
-            return fakeSpotifyUserAgentconfig
-        }()
-
-        static let fakeSpotifyUserAgentSession: URLSession = .init(configuration: fakeSpotifyUserAgentconfig)
     }
 }
 
@@ -30,34 +25,45 @@ extension LyricsProviders.Spotify {
     func lyricsSearchPublisher(request: LyricsSearchRequest) -> AnyPublisher<LyricsToken, Never> {
         let url: URL
         switch request.searchTerm {
-        case let .keyword(string):
+        case .keyword(let string):
             url = URL(string: "https://api.spotify.com/v1/search?q=track:\(string)&type=track&limit=10")!
-        case let .info(title, artist):
+        case .info(let title, let artist):
             url = URL(string: "https://api.spotify.com/v1/search?q=track:\(title) artist:\(artist)&type=track&limit=10")!
         }
 
         var req = URLRequest(url: url)
         req.addValue("WebPlayer", forHTTPHeaderField: "app-platform")
-        req.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        req.addValue("Bearer \(searchAccessToken)", forHTTPHeaderField: "Authorization")
         return sharedURLSession.cx.dataTaskPublisher(for: req)
             .map(\.data)
             .decode(type: SpotifyResponseSearchResult.self, decoder: JSONDecoder().cx)
             .map(\.tracks.items)
             .replaceError(with: [])
             .flatMap(Publishers.Sequence.init)
-            .map { $0 as LyricsToken }
+            .map {
+                $0 as LyricsToken
+            }
             .eraseToAnyPublisher()
     }
 
     func lyricsFetchPublisher(token: LyricsToken) -> AnyPublisher<Lyrics, Never> {
-        let url = URL(string: "https://spclient.wg.spotify.com/color-lyrics/v2/track/\(token.id)?format=json&vocalRemoval=false")!
+        let url = URL(string: "https://spclient.wg.spotify.com/color-lyrics/v2/track/\(token.id)?format=json&vocalRemoval=false&market=from_token")!
         var request = URLRequest(url: url)
         request.addValue("WebPlayer", forHTTPHeaderField: "app-platform")
-        request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.addValue("Bearer \(lyricsAccessToken)", forHTTPHeaderField: "Authorization")
 
-        return Self.fakeSpotifyUserAgentSession.cx.dataTaskPublisher(for: request)
+        return sharedURLSession.cx.dataTaskPublisher(for: request)
             .map(\.data)
+            .handleEvents(receiveOutput: { data in
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print("Received JSON: \(jsonString)")
+                }
+            })
             .decode(type: SpotifyResponseSingleLyrics.self, decoder: JSONDecoder().cx)
+            .catch { error -> AnyPublisher<SpotifyResponseSingleLyrics, Error> in
+                print("Decode error: \(error)")
+                return Fail(error: error).eraseToAnyPublisher()
+            }
             .map {
                 let lyrics = Lyrics(lines: $0.lyrics.lines.map {
                     LyricsLine(content: $0.words, position: (Double($0.startTimeMs) ?? 0) / 1000)

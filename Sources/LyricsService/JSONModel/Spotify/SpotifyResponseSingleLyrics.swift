@@ -18,7 +18,6 @@ struct SpotifyResponseSingleLyrics: Codable {
         let language: String
         let isRtlLanguage: Bool
         let capStatus: String
-        let isSnippet: Bool
 
         private enum CodingKeys: String, CodingKey {
             case syncType
@@ -31,7 +30,6 @@ struct SpotifyResponseSingleLyrics: Codable {
             case language
             case isRtlLanguage
             case capStatus
-            case isSnippet
         }
     }
 

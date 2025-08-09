@@ -16,7 +16,7 @@ extension LyricsProviders {
         case qq
         case kugou
         case lrclib
-        case spotify(accessToken: String)
+        case spotify(searchAccessToken: String, lyricsAccessToken: String)
 
         public var displayName: String {
             switch self {
@@ -46,7 +46,7 @@ extension LyricsProviders.Service {
         case .netease:  return LyricsProviders.NetEase()
         case .qq:       return LyricsProviders.QQMusic()
         case .kugou:    return LyricsProviders.Kugou()
-        case .spotify(let accessToken): return LyricsProviders.Spotify(accessToken: accessToken)
+        case .spotify(let searchAccessToken, let lyricsAccessToken): return LyricsProviders.Spotify(searchAccessToken: searchAccessToken, lyricsAccessToken: lyricsAccessToken)
         case .lrclib:   return LyricsProviders.LRCLIB()
 //        default:        return LyricsProviders.Unsupported()
         }
