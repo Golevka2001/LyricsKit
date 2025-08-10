@@ -1,12 +1,12 @@
 import Foundation
 
-struct SpotifyResponseSearchResult: Codable {
-    struct Track: Codable {
-        struct Item: Codable {
-            struct Album: Codable {
-                struct Artist: Codable {
-                    struct ExternalURL: Codable {
-                        let spotify: URL
+public struct SpotifyResponseSearchResult: Codable {
+    public struct Track: Codable {
+        public struct Item: Codable {
+            public struct Album: Codable {
+                public struct Artist: Codable {
+                    public struct ExternalURL: Codable {
+                        public let spotify: URL
                     }
 
                     let externalUrls: ExternalURL
@@ -26,30 +26,30 @@ struct SpotifyResponseSearchResult: Codable {
                     }
                 }
 
-                struct ExternalURL: Codable {
-                    let spotify: URL
+                public struct ExternalURL: Codable {
+                    public let spotify: URL
                 }
 
-                struct Image: Codable {
-                    let height: Int
-                    let width: Int
-                    let url: URL
+                public struct Image: Codable {
+                    public let height: Int
+                    public let width: Int
+                    public let url: URL
                 }
 
-                let albumType: String
-                let artists: [Artist]
-                let availableMarkets: [String]
-                let externalUrls: ExternalURL
-                let href: URL
-                let id: String
-                let images: [Image]
-                let isPlayable: Bool
-                let name: String
-                let releaseDate: String
-                let releaseDatePrecision: String
-                let totalTracks: Int
-                let type: String
-                let uri: String
+                public let albumType: String
+                public let artists: [Artist]
+                public let availableMarkets: [String]
+                public let externalUrls: ExternalURL
+                public let href: URL
+                public let id: String
+                public let images: [Image]
+                public let isPlayable: Bool
+                public let name: String
+                public let releaseDate: String
+                public let releaseDatePrecision: String
+                public let totalTracks: Int
+                public let type: String
+                public let uri: String
 
                 private enum CodingKeys: String, CodingKey {
                     case albumType = "album_type"
@@ -69,17 +69,17 @@ struct SpotifyResponseSearchResult: Codable {
                 }
             }
 
-            struct Artist: Codable {
-                struct ExternalURL: Codable {
-                    let spotify: URL
+            public struct Artist: Codable {
+                public struct ExternalURL: Codable {
+                    public let spotify: URL
                 }
 
-                let externalUrls: ExternalURL
-                let href: URL
-                let id: String
-                let name: String
-                let type: String
-                let uri: String
+                public let externalUrls: ExternalURL
+                public let href: URL
+                public let id: String
+                public let name: String
+                public let type: String
+                public let uri: String
 
                 private enum CodingKeys: String, CodingKey {
                     case externalUrls = "external_urls"
@@ -91,32 +91,32 @@ struct SpotifyResponseSearchResult: Codable {
                 }
             }
 
-            struct ExternalID: Codable {
-                let isrc: String
+            public struct ExternalID: Codable {
+                public let isrc: String
             }
 
-            struct ExternalURL: Codable {
-                let spotify: URL
+            public struct ExternalURL: Codable {
+                public let spotify: URL
             }
 
-            let album: Album
-            let artists: [Artist]
-            let availableMarkets: [String]
-            let discNumber: Int
-            let durationMs: Int
-            let explicit: Bool
-            let externalIds: ExternalID
-            let externalUrls: ExternalURL
-            let href: URL
-            let id: String
-            let isLocal: Bool
-            let isPlayable: Bool
-            let name: String
-            let popularity: Int
-            let previewURL: URL
-            let trackNumber: Int
-            let type: String
-            let uri: String
+            public let album: Album
+            public let artists: [Artist]
+            public let availableMarkets: [String]
+            public let discNumber: Int
+            public let durationMs: Int
+            public let explicit: Bool
+            public let externalIds: ExternalID
+            public let externalUrls: ExternalURL
+            public let href: URL
+            public let id: String
+            public let isLocal: Bool
+            public let isPlayable: Bool
+            public let name: String
+            public let popularity: Int
+            public let previewURL: URL
+            public let trackNumber: Int
+            public let type: String
+            public let uri: String
 
             private enum CodingKeys: String, CodingKey {
                 case album
@@ -140,12 +140,12 @@ struct SpotifyResponseSearchResult: Codable {
             }
         }
 
-        let href: URL
-        let limit: Int
-        let offset: Int
-        let total: Int
-        let items: [Item]
+        public let href: URL
+        public let limit: Int
+        public let offset: Int
+        public let total: Int
+        public let items: [Item]
     }
 
-    let tracks: Track
+    public let tracks: Track
 }

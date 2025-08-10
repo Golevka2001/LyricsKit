@@ -1,17 +1,7 @@
-//
-//  QQMusic.swift
-//  LyricsX - https://github.com/ddddxxx/LyricsX
-//
-//  This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-//
-
 import Foundation
 import LyricsCore
-import CXShim
-import CXExtensions
-//import SWXMLHash
+
+// import SWXMLHash
 
 #if canImport(FoundationNetworking)
 import FoundationNetworking
@@ -31,151 +21,93 @@ extension LyricsProviders {
 extension LyricsProviders.QQMusic: _LyricsProvider {
     public typealias LyricsToken = QQMusicSongSearchResult
 
-    public static let service: String? = "QQMusic"
+    public static let service: String = "QQMusic"
 
-    public func lyricsSearchPublisher(request: LyricsSearchRequest) -> AnyPublisher<LyricsToken, Never> {
+    public func search(for request: LyricsSearchRequest) async throws -> [LyricsToken] {
+        return try await withThrowingTaskGroup(of: [LyricsToken].self, returning: [LyricsToken].self) { group in
+            group.addTask {
+                return try await self.searchApi1(for: request)
+            }
+
+            group.addTask {
+                return try await self.searchApi2(for: request)
+            }
+
+            var combinedResults: [LyricsToken] = []
+            for try await results in group {
+                combinedResults.append(contentsOf: results)
+            }
+            return combinedResults
+        }
+    }
+
+    private func searchApi1(for request: LyricsSearchRequest) async throws -> [LyricsToken] {
         let parameter = ["key": request.searchTerm.description]
-        let url = URL(string: qqSearchBaseURLString1 + "?" + parameter.stringFromHttpParameters)!
+        guard let url = URL(string: qqSearchBaseURLString1 + "?" + parameter.stringFromHttpParameters) else {
+            throw LyricsProviderError.invalidURL(urlString: qqSearchBaseURLString1)
+        }
 
-        return sharedURLSession.cx.dataTaskPublisher(for: url)
-            .map { $0.data }
-            .decode(type: QQResponseSearchResult.self, decoder: JSONDecoder().cx)
-            .map(\.data.song.list)
-            .replaceError(with: [])
-            .flatMap(Publishers.Sequence.init)
-            .map { $0 as LyricsToken }
-            .eraseToAnyPublisher()
-//            .merge(with: lyricsSearchPublisher2(request: request))
-//            .eraseToAnyPublisher()
+        do {
+            let (data, _) = try await URLSession.shared.data(for: .init(url: url))
+            let result = try JSONDecoder().decode(QQResponseSearchResult.self, from: data)
+            return result.data.song.list
+        } catch {
+            print("QQMusic search API 1 failed: \(error)")
+            return []
+        }
     }
 
-    public func lyricsSearchPublisher2(request: LyricsSearchRequest) -> AnyPublisher<LyricsToken, Never> {
-        let parameter = [
-            "req_1": [
-                "method": "DoSearchForQQMusicDesktop",
-                "module": "music.search.SearchCgiService",
-                "param": [
-                    "num_per_page": "20",
-                    "page_num": "1",
-                    "query": request.searchTerm.titleOnly,
-                    "search_type": "0",
-                ],
-            ],
-        ]
-
-        let jsonData = try! JSONSerialization.data(withJSONObject: parameter, options: [])
-        let jsonString = String(data: jsonData, encoding: .utf8)!
-        let encodedJsonString = jsonString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-        let urlString = qqSearchBaseURLString2 + "?data=" + encodedJsonString
-        let url = URL(string: urlString)!
-        return sharedURLSession.cx.dataTaskPublisher(for: url)
-            .map { $0.data }
-            .decode(type: QQResponseSearchResult2.self, decoder: JSONDecoder().cx)
-            .map(\.request.data.body.song.list)
-            .replaceError(with: [])
-            .flatMap(Publishers.Sequence.init)
-            .map { $0 as LyricsToken }
-            .eraseToAnyPublisher()
+    private func searchApi2(for request: LyricsSearchRequest) async throws -> [LyricsToken] {
+        return []
     }
 
-    public func lyricsFetchPublisher(token: LyricsToken) -> AnyPublisher<Lyrics, Never> {
+    public func fetch(with token: LyricsToken) async throws -> Lyrics {
         let parameter: [String: Any] = [
             "musicid": token.id,
             "version": 15,
             "miniversion": 82,
-            "lrctype": 4,
+            "lrctype": 4
         ]
-        let url = URL(string: qqLyricsBaseURLString2 + "?" + parameter.stringFromHttpParameters)!
+        guard let url = URL(string: qqLyricsBaseURLString2 + "?" + parameter.stringFromHttpParameters) else {
+            throw LyricsProviderError.invalidURL(urlString: qqLyricsBaseURLString2)
+        }
+
         var req = URLRequest(url: url)
         req.setValue("y.qq.com/portal/player.html", forHTTPHeaderField: "Referer")
-        return sharedURLSession.cx.dataTaskPublisher(for: req)
-            .compactMap { response -> Lyrics? in
-                guard var dataString = String(data: response.data, encoding: .utf8) else {
-                    return nil
-                }
-                dataString = dataString.replacingOccurrences(of: "<!--", with: "")
-                dataString = dataString.replacingOccurrences(of: "-->", with: "")
-                guard let xmlDocument = try? XMLUtils.create(content: dataString),
-                      let encryptedString = try? xmlDocument.nodes(forXPath: "//content").first?.stringValue,
-                      let decryptedString = decryptQQMusicQrc(encryptedString),
-//                      let decryptedXMLDocument = try? XMLDocument(xmlString: decryptedString, options: [.nodePreserveAll, .nodeNeverEscapeContents]),
-//                      let qrcContent = try? decryptedXMLDocument.nodes(forXPath: "//@LyricContent").first?.xmlString(options: .nodePreserveAll),
-                      let lrc = Lyrics(qqmusicQrcContent: decryptedString)
-                else {
-                    return nil
-                }
 
-//                guard let model = try? JSONDecoder().decode(QQResponseSingleLyrics.self, from: data),
-//                    let lrcContent = model.lyricString,
-//                    let lrc = Lyrics(lrcContent) else {
-//                        return nil
-//                }
-//                if let transLrcContent = model.transString,
-//                    let transLrc = Lyrics(transLrcContent) {
-//                    lrc.merge(translation: transLrc)
-//                }
+        let data: Data
+        do {
+            (data, _) = try await URLSession.shared.data(for: req)
+        } catch {
+            throw LyricsProviderError.networkError(underlyingError: error)
+        }
 
-                lrc.idTags[.title] = token.name
-                lrc.idTags[.artist] = token.singers.joined(separator: ",")
-//                lrc.idTags[.album] = token.albumname
+        guard var dataString = String(data: data, encoding: .utf8) else {
+            throw LyricsProviderError.processingFailed(reason: "Could not convert data to string.")
+        }
+        dataString = dataString.replacingOccurrences(of: "<!--", with: "").replacingOccurrences(of: "-->", with: "")
 
-//                lrc.length = Double(token.interval)
-                lrc.metadata.serviceToken = "\(token.mid)"
-                if let id = Int(token.mid) {
-                    lrc.metadata.artworkURL = URL(string: "http://imgcache.qq.com/music/photo/album/\(id % 100)/\(id).jpg")
-                }
+        guard let xmlDocument = try? XMLUtils.create(content: dataString),
+              let encryptedString = try? xmlDocument.nodes(forXPath: "//content").first?.stringValue,
+              let decryptedString = decryptQQMusicQrc(encryptedString),
+              let lrc = Lyrics(qqmusicQrcContent: decryptedString)
+        else {
+            throw LyricsProviderError.processingFailed(reason: "Failed to parse or decrypt QQMusic QRC XML.")
+        }
 
-                if let transEncryptedString = try? xmlDocument.nodes(forXPath: "//contentts").first?.stringValue,
-                   let transDecryptedString = decryptQQMusicQrc(transEncryptedString),
-                   let transLrc = Lyrics(transDecryptedString)
-                {
-                    lrc.merge(translation: transLrc)
-                }
-                
-                // remove their kana tag. we don't need it.
-//                lrc.idTags.removeValue(forKey: .qqMusicKana)
+        lrc.idTags[.title] = token.name
+        lrc.idTags[.artist] = token.singers.joined(separator: ",")
+        lrc.metadata.serviceToken = "\(token.mid)"
+        if let id = Int(token.mid) {
+            lrc.metadata.artworkURL = URL(string: "http://imgcache.qq.com/music/photo/album/\(id % 100)/\(id).jpg")
+        }
 
-                return lrc
-            }.ignoreError()
-            .eraseToAnyPublisher()
-    }
+        if let transEncryptedString = try? xmlDocument.nodes(forXPath: "//contentts").first?.stringValue,
+           let transDecryptedString = decryptQQMusicQrc(transEncryptedString),
+           let transLrc = Lyrics(transDecryptedString) {
+            lrc.merge(translation: transLrc)
+        }
 
-    public func _lyricsFetchPublisher(token: LyricsToken) -> AnyPublisher<Lyrics, Never> {
-        let parameter: [String: Any] = [
-            "songmid": token.mid,
-            "g_tk": 5381,
-        ]
-        let url = URL(string: qqLyricsBaseURLString1 + "?" + parameter.stringFromHttpParameters)!
-        var req = URLRequest(url: url)
-        req.setValue("y.qq.com/portal/player.html", forHTTPHeaderField: "Referer")
-        return sharedURLSession.cx.dataTaskPublisher(for: req)
-            .compactMap { response -> Lyrics? in
-                let data = response.data.dropFirst(18).dropLast()
-                guard let model = try? JSONDecoder().decode(QQResponseSingleLyrics.self, from: data),
-                      let lrcContent = model.lyricString,
-                      let lrc = Lyrics(lrcContent) else {
-                    return nil
-                }
-                if let transLrcContent = model.transString,
-                   let transLrc = Lyrics(transLrcContent) {
-                    lrc.merge(translation: transLrc)
-                }
-
-                lrc.idTags[.title] = token.name
-                lrc.idTags[.artist] = token.singers.joined(separator: ",")
-//                lrc.idTags[.album] = token.albumname
-
-//                lrc.length = Double(token.interval)
-                lrc.metadata.serviceToken = "\(token.mid)"
-                if let id = Int(token.mid) {
-                    lrc.metadata.artworkURL = URL(string: "http://imgcache.qq.com/music/photo/album/\(id % 100)/\(id).jpg")
-                }
-
-                // remove their kana tag. we don't need it.
-//                lrc.idTags.removeValue(forKey: .qqMusicKana)
-
-                return lrc
-            }.ignoreError()
-            .eraseToAnyPublisher()
+        return lrc
     }
 }

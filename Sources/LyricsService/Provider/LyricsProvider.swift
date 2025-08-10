@@ -1,45 +1,54 @@
-//
-//  LyricsProvider.swift
-//  LyricsX - https://github.com/ddddxxx/LyricsX
-//
-//  This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-//
-
 import Foundation
 import LyricsCore
-import CXShim
 
 public enum LyricsProviders {}
 
 public protocol LyricsProvider {
-    
-    func lyricsPublisher(request: LyricsSearchRequest) -> AnyPublisher<Lyrics, Never>
+    func lyrics(for request: LyricsSearchRequest) -> AsyncThrowingStream<Lyrics, Error>
 }
 
 public protocol _LyricsProvider: LyricsProvider {
-    
     associatedtype LyricsToken
-    
-    static var service: String? { get }
-    
-    func lyricsSearchPublisher(request: LyricsSearchRequest) -> AnyPublisher<LyricsToken, Never>
-    
-    func lyricsFetchPublisher(token: LyricsToken) -> AnyPublisher<Lyrics, Never>
+
+    static var service: String { get }
+
+    func search(for request: LyricsSearchRequest) async throws -> [LyricsToken]
+
+    func fetch(with token: LyricsToken) async throws -> Lyrics
 }
 
 extension _LyricsProvider {
-    
-    public func lyricsPublisher(request: LyricsSearchRequest) -> AnyPublisher<Lyrics, Never> {
-        return lyricsSearchPublisher(request: request)
-            .prefix(request.limit)
-            .flatMap(self.lyricsFetchPublisher)
-            .map { lrc in
-                lrc.metadata.request = request
-                lrc.metadata.service = Self.service
-                // TODO: lrc.metadata.searchIndex
-                return lrc
-            }.eraseToAnyPublisher()
+    public func lyrics(for request: LyricsSearchRequest) -> AsyncThrowingStream<Lyrics, Error> {
+        return AsyncThrowingStream { continuation in
+            Task {
+                do {
+                    let tokens = try await self.search(for: request)
+                    let limitedTokens = tokens.prefix(request.limit)
+
+                    let fetchTasks: [Task<Lyrics, Error>] = limitedTokens.map { token in
+                        Task {
+                            var lrc = try await self.fetch(with: token)
+                            lrc.metadata.request = request
+                            lrc.metadata.service = Self.service
+                            return lrc
+                        }
+                    }
+
+                    for task in fetchTasks {
+                        do {
+                            let lyric = try await task.value
+                            continuation.yield(lyric)
+                        } catch {
+                            print("A fetch task failed, skipping. Error: \(error)")
+                        }
+                    }
+
+                    continuation.finish()
+
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+        }
     }
 }

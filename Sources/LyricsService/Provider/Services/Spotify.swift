@@ -1,13 +1,9 @@
-import Regex
-import CXShim
 import Foundation
+import Regex
 import LyricsCore
-import CXExtensions
 
 extension LyricsProviders {
-    final class Spotify: _LyricsProvider {
-        typealias LyricsToken = SpotifyResponseSearchResult.Track.Item
-
+    public final class Spotify {
         let searchAccessToken: String
 
         let lyricsAccessToken: String
@@ -19,64 +15,70 @@ extension LyricsProviders {
     }
 }
 
-extension LyricsProviders.Spotify {
-    static let service: String? = "Spotify"
+extension LyricsProviders.Spotify: _LyricsProvider {
+    public typealias LyricsToken = SpotifyResponseSearchResult.Track.Item
 
-    func lyricsSearchPublisher(request: LyricsSearchRequest) -> AnyPublisher<LyricsToken, Never> {
+    public static let service: String = "Spotify"
+
+    public func search(for request: LyricsSearchRequest) async throws -> [LyricsToken] {
         let url: URL
         switch request.searchTerm {
         case .keyword(let string):
-            url = URL(string: "https://api.spotify.com/v1/search?q=track:\(string)&type=track&limit=10")!
+            url = URL(string: "https://api.spotify.com/v1/search?q=track:\(string)&type=track&limit=\(request.limit)")!
         case .info(let title, let artist):
-            url = URL(string: "https://api.spotify.com/v1/search?q=track:\(title) artist:\(artist)&type=track&limit=10")!
+            url = URL(string: "https://api.spotify.com/v1/search?q=track:\(title) artist:\(artist)&type=track&limit=\(request.limit)")!
         }
 
         var req = URLRequest(url: url)
         req.addValue("WebPlayer", forHTTPHeaderField: "app-platform")
         req.addValue("Bearer \(searchAccessToken)", forHTTPHeaderField: "Authorization")
-        return sharedURLSession.cx.dataTaskPublisher(for: req)
-            .map(\.data)
-            .decode(type: SpotifyResponseSearchResult.self, decoder: JSONDecoder().cx)
-            .map(\.tracks.items)
-            .replaceError(with: [])
-            .flatMap(Publishers.Sequence.init)
-            .map {
-                $0 as LyricsToken
-            }
-            .eraseToAnyPublisher()
+
+        do {
+            let (data, _) = try await URLSession.shared.data(for: req)
+            let result = try JSONDecoder().decode(SpotifyResponseSearchResult.self, from: data)
+            print(result)
+            return result.tracks.items
+        } catch let error as DecodingError {
+            throw LyricsProviderError.decodingError(underlyingError: error)
+        } catch {
+            throw LyricsProviderError.networkError(underlyingError: error)
+        }
     }
 
-    func lyricsFetchPublisher(token: LyricsToken) -> AnyPublisher<Lyrics, Never> {
-        let url = URL(string: "https://spclient.wg.spotify.com/color-lyrics/v2/track/\(token.id)?format=json&vocalRemoval=false&market=from_token")!
+    public func fetch(with token: LyricsToken) async throws -> Lyrics {
+        guard let url = URL(string: "https://spclient.wg.spotify.com/color-lyrics/v2/track/\(token.id)?format=json&vocalRemoval=false&market=from_token") else {
+            throw LyricsProviderError.invalidURL(urlString: "Spotify fetch URL")
+        }
+
         var request = URLRequest(url: url)
         request.addValue("WebPlayer", forHTTPHeaderField: "app-platform")
         request.addValue("Bearer \(lyricsAccessToken)", forHTTPHeaderField: "Authorization")
 
-        return sharedURLSession.cx.dataTaskPublisher(for: request)
-            .map(\.data)
-            .handleEvents(receiveOutput: { data in
-                if let jsonString = String(data: data, encoding: .utf8) {
-                    print("Received JSON: \(jsonString)")
-                }
-            })
-            .decode(type: SpotifyResponseSingleLyrics.self, decoder: JSONDecoder().cx)
-            .catch { error -> AnyPublisher<SpotifyResponseSingleLyrics, Error> in
-                print("Decode error: \(error)")
-                return Fail(error: error).eraseToAnyPublisher()
+        let singleLyricsResponse: SpotifyResponseSingleLyrics
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request)
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("Spotify Received JSON: \(jsonString)")
             }
-            .map {
-                let lyrics = Lyrics(lines: $0.lyrics.lines.map {
-                    LyricsLine(content: $0.words, position: (Double($0.startTimeMs) ?? 0) / 1000)
-                }, idTags: [:])
-                lyrics.idTags[.title] = token.name
-                lyrics.idTags[.artist] = token.artists.map(\.name).joined(separator: ", ")
-                lyrics.idTags[.album] = token.album.name
-                lyrics.length = Double(token.durationMs) / 1000
-                lyrics.metadata.artworkURL = token.album.images.first?.url
-                lyrics.metadata.serviceToken = token.id
-                return lyrics
-            }
-            .ignoreError()
-            .eraseToAnyPublisher()
+            singleLyricsResponse = try JSONDecoder().decode(SpotifyResponseSingleLyrics.self, from: data)
+        } catch let error as DecodingError {
+            print("Spotify Decode error: \(error)")
+            throw LyricsProviderError.decodingError(underlyingError: error)
+        } catch {
+            throw LyricsProviderError.networkError(underlyingError: error)
+        }
+
+        let lyrics = Lyrics(lines: singleLyricsResponse.lyrics.lines.map {
+            LyricsLine(content: $0.words, position: (Double($0.startTimeMs) ?? 0) / 1000)
+        }, idTags: [:])
+
+        lyrics.idTags[.title] = token.name
+        lyrics.idTags[.artist] = token.artists.map(\.name).joined(separator: ", ")
+        lyrics.idTags[.album] = token.album.name
+        lyrics.length = Double(token.durationMs) / 1000
+        lyrics.metadata.artworkURL = token.album.images.first?.url
+        lyrics.metadata.serviceToken = token.id
+
+        return lyrics
     }
 }

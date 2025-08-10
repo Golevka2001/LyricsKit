@@ -1,19 +1,9 @@
-//
-//  Service.swift
-//  LyricsX - https://github.com/ddddxxx/LyricsX
-//
-//  This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-//
-
 import Foundation
 
 extension LyricsProviders {
-    
     public enum Service {
-        case netease
         case qq
+        case netease
         case kugou
         case lrclib
         case spotify(searchAccessToken: String, lyricsAccessToken: String)
@@ -27,11 +17,11 @@ extension LyricsProviders {
             case .spotify: return "Spotify"
             }
         }
-        
+
         public static var noAuthenticationRequiredServices: [Service] {
             [
-                .netease,
                 .qq,
+                .netease,
                 .kugou,
                 .lrclib,
             ]
@@ -40,14 +30,13 @@ extension LyricsProviders {
 }
 
 extension LyricsProviders.Service {
-    
     func create() -> LyricsProvider {
         switch self {
-        case .netease:  return LyricsProviders.NetEase()
-        case .qq:       return LyricsProviders.QQMusic()
-        case .kugou:    return LyricsProviders.Kugou()
+        case .netease: return LyricsProviders.NetEase()
+        case .qq: return LyricsProviders.QQMusic()
+        case .kugou: return LyricsProviders.Kugou()
         case .spotify(let searchAccessToken, let lyricsAccessToken): return LyricsProviders.Spotify(searchAccessToken: searchAccessToken, lyricsAccessToken: lyricsAccessToken)
-        case .lrclib:   return LyricsProviders.LRCLIB()
+        case .lrclib: return LyricsProviders.LRCLIB()
 //        default:        return LyricsProviders.Unsupported()
         }
     }

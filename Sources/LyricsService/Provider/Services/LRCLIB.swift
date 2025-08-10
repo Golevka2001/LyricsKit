@@ -1,7 +1,5 @@
 import Foundation
 import LyricsCore
-import CXShim
-import CXExtensions
 import Regex
 
 #if canImport(FoundationNetworking)
@@ -19,24 +17,57 @@ extension LyricsProviders {
 extension LyricsProviders.LRCLIB: _LyricsProvider {
     public typealias LyricsToken = LRCLIBResponse
 
-    public static let service: String? = "LRCLIB"
+    public static let service: String = "LRCLIB"
 
-    public func lyricsSearchPublisher(request: LyricsSearchRequest) -> AnyPublisher<LyricsToken, Never> {
-        let url = switch request.searchTerm {
-        case let .keyword(string):
-            URL(string: "https://lrclib.net/api/search?q=\(string)")!
-        case let .info(title, artist):
-            URL(string: "https://lrclib.net/api/search?track_name=\(title)&artist_name=\(artist)")!
+    public func search(for request: LyricsSearchRequest) async throws -> [LyricsToken] {
+        let urlString: String
+        switch request.searchTerm {
+        case .keyword(let string):
+            urlString = "https://lrclib.net/api/search?q=\(string)"
+        case .info(let title, let artist):
+            urlString = "https://lrclib.net/api/search?track_name=\(title)&artist_name=\(artist)"
         }
-        var req = URLRequest(url: url)
-        req.httpMethod = "GET"
-        return sharedURLSession.cx.dataTaskPublisher(for: req)
-            .map(\.data)
-            .decode(type: [LRCLIBResponse].self, decoder: JSONDecoder().cx)
-            .replaceError(with: [])
-            .flatMap(Publishers.Sequence.init)
-            .map { $0 as LyricsToken }
-            .eraseToAnyPublisher()
+
+        guard let url = URL(string: urlString) else {
+            throw LyricsProviderError.invalidURL(urlString: urlString)
+        }
+
+        do {
+            let (data, _) = try await URLSession.shared.data(for: .init(url: url))
+            let results = try JSONDecoder().decode([LRCLIBResponse].self, from: data)
+            return results
+        } catch let error as DecodingError {
+            throw LyricsProviderError.decodingError(underlyingError: error)
+        } catch {
+            throw LyricsProviderError.networkError(underlyingError: error)
+        }
+    }
+
+    public func fetch(with token: LyricsToken) async throws -> Lyrics {
+        if let lyrics = parseLyrics(for: token) {
+            return lyrics
+        }
+
+        let urlString = "https://lrclib.net/api/get/\(token.id)"
+        guard let url = URL(string: urlString) else {
+            throw LyricsProviderError.invalidURL(urlString: urlString)
+        }
+
+        let fetchedToken: LRCLIBResponse
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            fetchedToken = try JSONDecoder().decode(LRCLIBResponse.self, from: data)
+        } catch let error as DecodingError {
+            throw LyricsProviderError.decodingError(underlyingError: error)
+        } catch {
+            throw LyricsProviderError.networkError(underlyingError: error)
+        }
+
+        if let lyrics = parseLyrics(for: fetchedToken) {
+            return lyrics
+        } else {
+            throw LyricsProviderError.processingFailed(reason: "Synced lyrics not found in fetched LRCLIB response.")
+        }
     }
 
     private func parseLyrics(for token: LyricsToken) -> Lyrics? {
@@ -44,24 +75,8 @@ extension LyricsProviders.LRCLIB: _LyricsProvider {
         lyrics.idTags[.title] = token.trackName
         lyrics.idTags[.artist] = token.artistName
         lyrics.idTags[.album] = token.albumName
-        lyrics.length = Double(token.duration) / 1000
+        lyrics.length = Double(token.duration)
         lyrics.metadata.serviceToken = "\(token.id)"
         return lyrics
-    }
-
-    public func lyricsFetchPublisher(token: LyricsToken) -> AnyPublisher<Lyrics, Never> {
-        if let lyrics = parseLyrics(for: token) {
-            return Just(lyrics).eraseToAnyPublisher()
-        } else {
-            return sharedURLSession.cx.dataTaskPublisher(for: .init(string: "https://lrclib.net/api/get/\(token.id)")!)
-                .map(\.data)
-                .decode(type: LRCLIBResponse.self, decoder: JSONDecoder().cx)
-                .compactMap { [weak self] in
-                    guard let self else { return nil }
-                    return parseLyrics(for: $0)
-                }
-                .ignoreError()
-                .eraseToAnyPublisher()
-        }
     }
 }
