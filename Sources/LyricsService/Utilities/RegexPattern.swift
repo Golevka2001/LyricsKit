@@ -24,4 +24,4 @@ let netEaseInlineTagRegex = Regex(#"\(0,(\d+)\)([^(]+)(\(0,1\) )?"#)
 
 let kugouInlineTagRegex = Regex(#"<(\d+),(\d+),0>([^<]*)"#)
 
-let qqmusicInlineTagRegex = Regex(#"(.+?)\((\d+),(\d+)\)"#)
+let qqmusicInlineTagRegex = Regex(#"([^(]*)\((\d+),(\d+)\)"#)
