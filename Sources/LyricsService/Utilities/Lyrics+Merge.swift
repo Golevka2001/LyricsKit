@@ -1,19 +1,9 @@
-//
-//  Lyrics+Merge.swift
-//  LyricsX - https://github.com/ddddxxx/LyricsX
-//
-//  This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-//
-
 import Foundation
 import LyricsCore
 
 private let mergeTimetagThreshold = 0.02
 
 extension Lyrics {
-    
     func merge(translation: Lyrics) {
         var index = lines.startIndex
         var transIndex = translation.lines.startIndex
@@ -33,7 +23,7 @@ extension Lyrics {
         }
         metadata.attachmentTags.insert(.translation())
     }
-    
+
     /// merge without maching timetag
     func forceMerge(translation: Lyrics) {
         guard lines.count == translation.lines.count else {

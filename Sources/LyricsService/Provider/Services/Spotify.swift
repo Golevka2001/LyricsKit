@@ -16,7 +16,9 @@ extension LyricsProviders {
 }
 
 extension LyricsProviders.Spotify: _LyricsProvider {
-    public typealias LyricsToken = SpotifyResponseSearchResult.Track.Item
+    public struct LyricsToken {
+        let value: SpotifyResponseSearchResult.Track.Item
+    }
 
     public static let service: String = "Spotify"
 
@@ -37,7 +39,7 @@ extension LyricsProviders.Spotify: _LyricsProvider {
             let (data, _) = try await URLSession.shared.data(for: req)
             let result = try JSONDecoder().decode(SpotifyResponseSearchResult.self, from: data)
             print(result)
-            return result.tracks.items
+            return result.tracks.items.map { LyricsToken(value: $0) }
         } catch let error as DecodingError {
             throw LyricsProviderError.decodingError(underlyingError: error)
         } catch {
@@ -46,6 +48,7 @@ extension LyricsProviders.Spotify: _LyricsProvider {
     }
 
     public func fetch(with token: LyricsToken) async throws -> Lyrics {
+        let token = token.value
         guard let url = URL(string: "https://spclient.wg.spotify.com/color-lyrics/v2/track/\(token.id)?format=json&vocalRemoval=false&market=from_token") else {
             throw LyricsProviderError.invalidURL(urlString: "Spotify fetch URL")
         }

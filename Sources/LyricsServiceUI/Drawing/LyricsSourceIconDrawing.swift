@@ -1,23 +1,13 @@
-//
-//  LyricsSourceIconDrawing.swift
-//  LyricsX - https://github.com/ddddxxx/LyricsX
-//
-//  This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-//
-
 #if canImport(CoreGraphics)
 
 #if canImport(Cocoa)
-    
+
 import Cocoa
 
 typealias BezierPath = NSBezierPath
 typealias Color = NSColor
 
 extension BezierPath {
-    
     var usesEvenOddFillRule: Bool {
         get {
             return windingRule == .evenOdd
@@ -26,41 +16,39 @@ extension BezierPath {
             windingRule = newValue ? .evenOdd : .nonZero
         }
     }
-    
+
     func addLine(to point: NSPoint) {
         line(to: point)
     }
-    
+
     func addCurve(to endPoint: NSPoint, controlPoint1: NSPoint, controlPoint2: NSPoint) {
         curve(to: endPoint, controlPoint1: controlPoint1, controlPoint2: controlPoint2)
     }
-    
 }
-    
+
 #elseif canImport(UIKit)
-    
+
 import UIKit
 
 typealias BezierPath = UIBezierPath
 typealias Color = UIColor
-    
+
 #endif
 
 public class LyricsSourceIconDrawing {
-
     //// Cache
 
-    private struct Cache {
-        static let netEaseRed: Color = Color(red: 0.861, green: 0.000, blue: 0.100, alpha: 1.000)
-        static let white: Color = Color(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000)
-        static let qqMusicYellow: Color = Color(red: 0.942, green: 0.765, blue: 0.165, alpha: 1.000)
-        static let qqMusicGreen: Color = Color(red: 0.185, green: 0.661, blue: 0.383, alpha: 1.000)
-        static let xiamiOrange: Color = Color(red: 0.963, green: 0.272, blue: 0.101, alpha: 1.000)
-        static let kugouBlue: Color = Color(red: 0.108, green: 0.484, blue: 0.801, alpha: 1.000)
-        static let gecimiRed: Color = Color(red: 0.805, green: 0.000, blue: 0.159, alpha: 1.000)
-        static let gecimiGreen: Color = Color(red: 0.096, green: 0.515, blue: 0.094, alpha: 1.000)
-        static let gecimiBlue: Color = Color(red: 0.081, green: 0.186, blue: 0.881, alpha: 1.000)
-        static let gecimiYellow: Color = Color(red: 0.923, green: 0.529, blue: 0.121, alpha: 1.000)
+    private enum Cache {
+        static let netEaseRed: Color = .init(red: 0.861, green: 0.000, blue: 0.100, alpha: 1.000)
+        static let white: Color = .init(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000)
+        static let qqMusicYellow: Color = .init(red: 0.942, green: 0.765, blue: 0.165, alpha: 1.000)
+        static let qqMusicGreen: Color = .init(red: 0.185, green: 0.661, blue: 0.383, alpha: 1.000)
+        static let xiamiOrange: Color = .init(red: 0.963, green: 0.272, blue: 0.101, alpha: 1.000)
+        static let kugouBlue: Color = .init(red: 0.108, green: 0.484, blue: 0.801, alpha: 1.000)
+        static let gecimiRed: Color = .init(red: 0.805, green: 0.000, blue: 0.159, alpha: 1.000)
+        static let gecimiGreen: Color = .init(red: 0.096, green: 0.515, blue: 0.094, alpha: 1.000)
+        static let gecimiBlue: Color = .init(red: 0.081, green: 0.186, blue: 0.881, alpha: 1.000)
+        static let gecimiYellow: Color = .init(red: 0.923, green: 0.529, blue: 0.121, alpha: 1.000)
     }
 
     //// Colors
@@ -79,7 +67,6 @@ public class LyricsSourceIconDrawing {
     //// Drawing Methods
 
     class func drawNetEaseMusic(frame: CGRect = CGRect(x: 0, y: 0, width: 48, height: 48)) {
-
         //// bg Drawing
         let bgPath = BezierPath()
         bgPath.move(to: CGPoint(x: frame.minX + 0.50000 * frame.width, y: frame.minY + 1.00000 * frame.height))
@@ -88,11 +75,10 @@ public class LyricsSourceIconDrawing {
         bgPath.addCurve(to: CGPoint(x: frame.minX + 0.00000 * frame.width, y: frame.minY + 0.50000 * frame.height), controlPoint1: CGPoint(x: frame.minX + 0.22386 * frame.width, y: frame.minY + 0.00000 * frame.height), controlPoint2: CGPoint(x: frame.minX + 0.00000 * frame.width, y: frame.minY + 0.22386 * frame.height))
         bgPath.addCurve(to: CGPoint(x: frame.minX + 0.50000 * frame.width, y: frame.minY + 1.00000 * frame.height), controlPoint1: CGPoint(x: frame.minX + 0.00000 * frame.width, y: frame.minY + 0.77614 * frame.height), controlPoint2: CGPoint(x: frame.minX + 0.22386 * frame.width, y: frame.minY + 1.00000 * frame.height))
         bgPath.close()
-        bgPath.usesEvenOddFillRule = true;
+        bgPath.usesEvenOddFillRule = true
 
         LyricsSourceIconDrawing.netEaseRed.setFill()
         bgPath.fill()
-
 
         //// shape Drawing
         let shapePath = BezierPath()
@@ -155,14 +141,13 @@ public class LyricsSourceIconDrawing {
         shapePath.addCurve(to: CGPoint(x: frame.minX + 0.53259 * frame.width, y: frame.minY + 0.44238 * frame.height), controlPoint1: CGPoint(x: frame.minX + 0.54537 * frame.width, y: frame.minY + 0.48898 * frame.height), controlPoint2: CGPoint(x: frame.minX + 0.53890 * frame.width, y: frame.minY + 0.46570 * frame.height))
         shapePath.addCurve(to: CGPoint(x: frame.minX + 0.52227 * frame.width, y: frame.minY + 0.40410 * frame.height), controlPoint1: CGPoint(x: frame.minX + 0.52920 * frame.width, y: frame.minY + 0.42984 * frame.height), controlPoint2: CGPoint(x: frame.minX + 0.52581 * frame.width, y: frame.minY + 0.41726 * frame.height))
         shapePath.close()
-        shapePath.usesEvenOddFillRule = true;
+        shapePath.usesEvenOddFillRule = true
 
         LyricsSourceIconDrawing.white.setFill()
         shapePath.fill()
     }
 
     class func drawQQMusic(frame: CGRect = CGRect(x: 0, y: 0, width: 48, height: 48)) {
-
         //// bg Drawing
         let bgPath = BezierPath()
         bgPath.move(to: CGPoint(x: frame.minX + 0.50000 * frame.width, y: frame.minY + 1.00000 * frame.height))
@@ -171,11 +156,10 @@ public class LyricsSourceIconDrawing {
         bgPath.addCurve(to: CGPoint(x: frame.minX + 0.00000 * frame.width, y: frame.minY + 0.50000 * frame.height), controlPoint1: CGPoint(x: frame.minX + 0.22386 * frame.width, y: frame.minY + 0.00000 * frame.height), controlPoint2: CGPoint(x: frame.minX + 0.00000 * frame.width, y: frame.minY + 0.22386 * frame.height))
         bgPath.addCurve(to: CGPoint(x: frame.minX + 0.50000 * frame.width, y: frame.minY + 1.00000 * frame.height), controlPoint1: CGPoint(x: frame.minX + 0.00000 * frame.width, y: frame.minY + 0.77614 * frame.height), controlPoint2: CGPoint(x: frame.minX + 0.22386 * frame.width, y: frame.minY + 1.00000 * frame.height))
         bgPath.close()
-        bgPath.usesEvenOddFillRule = true;
+        bgPath.usesEvenOddFillRule = true
 
         LyricsSourceIconDrawing.qqMusicYellow.setFill()
         bgPath.fill()
-
 
         //// note Drawing
         let notePath = BezierPath()
@@ -209,14 +193,13 @@ public class LyricsSourceIconDrawing {
         notePath.addCurve(to: CGPoint(x: frame.minX + 0.31250 * frame.width, y: frame.minY + 0.72893 * frame.height), controlPoint1: CGPoint(x: frame.minX + 0.32281 * frame.width, y: frame.minY + 0.79598 * frame.height), controlPoint2: CGPoint(x: frame.minX + 0.31250 * frame.width, y: frame.minY + 0.76273 * frame.height))
         notePath.addCurve(to: CGPoint(x: frame.minX + 0.31250 * frame.width, y: frame.minY + 0.72893 * frame.height), controlPoint1: CGPoint(x: frame.minX + 0.31350 * frame.width, y: frame.minY + 0.72295 * frame.height), controlPoint2: CGPoint(x: frame.minX + 0.31250 * frame.width, y: frame.minY + 0.73340 * frame.height))
         notePath.close()
-        notePath.usesEvenOddFillRule = true;
+        notePath.usesEvenOddFillRule = true
 
         LyricsSourceIconDrawing.qqMusicGreen.setFill()
         notePath.fill()
     }
 
     class func drawXiami(frame: CGRect = CGRect(x: 0, y: 0, width: 48, height: 48)) {
-
         //// bg Drawing
         let bgPath = BezierPath()
         bgPath.move(to: CGPoint(x: frame.minX + 0.00000 * frame.width, y: frame.minY + 0.20842 * frame.height))
@@ -229,11 +212,10 @@ public class LyricsSourceIconDrawing {
         bgPath.addCurve(to: CGPoint(x: frame.minX + 0.00000 * frame.width, y: frame.minY + 0.79158 * frame.height), controlPoint1: CGPoint(x: frame.minX + 0.09331 * frame.width, y: frame.minY + 1.00000 * frame.height), controlPoint2: CGPoint(x: frame.minX + 0.00000 * frame.width, y: frame.minY + 0.90682 * frame.height))
         bgPath.addLine(to: CGPoint(x: frame.minX + 0.00000 * frame.width, y: frame.minY + 0.20842 * frame.height))
         bgPath.close()
-        bgPath.usesEvenOddFillRule = true;
+        bgPath.usesEvenOddFillRule = true
 
         LyricsSourceIconDrawing.xiamiOrange.setFill()
         bgPath.fill()
-
 
         //// xia Drawing
         let xiaPath = BezierPath()
@@ -301,25 +283,22 @@ public class LyricsSourceIconDrawing {
         xiaPath.addCurve(to: CGPoint(x: frame.minX + 0.79117 * frame.width, y: frame.minY + 0.55811 * frame.height), controlPoint1: CGPoint(x: frame.minX + 0.80870 * frame.width, y: frame.minY + 0.51922 * frame.height), controlPoint2: CGPoint(x: frame.minX + 0.80868 * frame.width, y: frame.minY + 0.54330 * frame.height))
         xiaPath.addLine(to: CGPoint(x: frame.minX + 0.71925 * frame.width, y: frame.minY + 0.61897 * frame.height))
         xiaPath.close()
-        xiaPath.usesEvenOddFillRule = true;
+        xiaPath.usesEvenOddFillRule = true
 
         LyricsSourceIconDrawing.white.setFill()
         xiaPath.fill()
     }
 
     class func drawKugou(frame: CGRect = CGRect(x: 0, y: 0, width: 48, height: 48)) {
-
         //// bg Drawing
         let bgPath = BezierPath(ovalIn: CGRect(x: frame.minX + floor(frame.width * 0.00000 + 0.5), y: frame.minY + floor(frame.height * 0.00000 + 0.5), width: floor(frame.width * 1.00000 + 0.5) - floor(frame.width * 0.00000 + 0.5), height: floor(frame.height * 1.00000 + 0.5) - floor(frame.height * 0.00000 + 0.5)))
         LyricsSourceIconDrawing.kugouBlue.setFill()
         bgPath.fill()
 
-
         //// inner Drawing
         let innerPath = BezierPath(ovalIn: CGRect(x: frame.minX + floor(frame.width * 0.10417 + 0.5), y: frame.minY + floor(frame.height * 0.10417 + 0.5), width: floor(frame.width * 0.89583 + 0.5) - floor(frame.width * 0.10417 + 0.5), height: floor(frame.height * 0.89583 + 0.5) - floor(frame.height * 0.10417 + 0.5)))
         LyricsSourceIconDrawing.white.setFill()
         innerPath.fill()
-
 
         //// k Drawing
         let kPath = BezierPath()
@@ -345,7 +324,6 @@ public class LyricsSourceIconDrawing {
     }
 
     class func drawGecimi(frame: CGRect = CGRect(x: 0, y: 0, width: 48, height: 48)) {
-
         //// bg Drawing
         let bgPath = BezierPath()
         bgPath.move(to: CGPoint(x: frame.minX + 0.00000 * frame.width, y: frame.minY + 0.20842 * frame.height))
@@ -358,11 +336,10 @@ public class LyricsSourceIconDrawing {
         bgPath.addCurve(to: CGPoint(x: frame.minX + 0.00000 * frame.width, y: frame.minY + 0.79158 * frame.height), controlPoint1: CGPoint(x: frame.minX + 0.09331 * frame.width, y: frame.minY + 1.00000 * frame.height), controlPoint2: CGPoint(x: frame.minX + 0.00000 * frame.width, y: frame.minY + 0.90682 * frame.height))
         bgPath.addLine(to: CGPoint(x: frame.minX + 0.00000 * frame.width, y: frame.minY + 0.20842 * frame.height))
         bgPath.close()
-        bgPath.usesEvenOddFillRule = true;
+        bgPath.usesEvenOddFillRule = true
 
         LyricsSourceIconDrawing.white.setFill()
         bgPath.fill()
-
 
         //// l6 Drawing
         let l6Path = BezierPath()
@@ -398,11 +375,10 @@ public class LyricsSourceIconDrawing {
         l6Path.addLine(to: CGPoint(x: frame.minX + 0.86223 * frame.width, y: frame.minY + 0.58333 * frame.height))
         l6Path.addLine(to: CGPoint(x: frame.minX + 0.92046 * frame.width, y: frame.minY + 0.58333 * frame.height))
         l6Path.close()
-        l6Path.usesEvenOddFillRule = true;
+        l6Path.usesEvenOddFillRule = true
 
         LyricsSourceIconDrawing.gecimiRed.setFill()
         l6Path.fill()
-
 
         //// l5 Drawing
         let l5Path = BezierPath()
@@ -471,11 +447,10 @@ public class LyricsSourceIconDrawing {
         l5Path.addLine(to: CGPoint(x: frame.minX + 0.79560 * frame.width, y: frame.minY + 0.58333 * frame.height))
         l5Path.addLine(to: CGPoint(x: frame.minX + 0.84896 * frame.width, y: frame.minY + 0.58333 * frame.height))
         l5Path.close()
-        l5Path.usesEvenOddFillRule = true;
+        l5Path.usesEvenOddFillRule = true
 
         LyricsSourceIconDrawing.gecimiGreen.setFill()
         l5Path.fill()
-
 
         //// l4 Drawing
         let l4Path = BezierPath()
@@ -511,11 +486,10 @@ public class LyricsSourceIconDrawing {
         l4Path.addCurve(to: CGPoint(x: frame.minX + 0.62633 * frame.width, y: frame.minY + 0.58063 * frame.height), controlPoint1: CGPoint(x: frame.minX + 0.62268 * frame.width, y: frame.minY + 0.58004 * frame.height), controlPoint2: CGPoint(x: frame.minX + 0.62453 * frame.width, y: frame.minY + 0.58026 * frame.height))
         l4Path.addLine(to: CGPoint(x: frame.minX + 0.62633 * frame.width, y: frame.minY + 0.58333 * frame.height))
         l4Path.close()
-        l4Path.usesEvenOddFillRule = true;
+        l4Path.usesEvenOddFillRule = true
 
         LyricsSourceIconDrawing.gecimiBlue.setFill()
         l4Path.fill()
-
 
         //// l3 Drawing
         let l3Path = BezierPath()
@@ -555,11 +529,10 @@ public class LyricsSourceIconDrawing {
         l3Path.addCurve(to: CGPoint(x: frame.minX + 0.55321 * frame.width, y: frame.minY + 0.55991 * frame.height), controlPoint1: CGPoint(x: frame.minX + 0.54599 * frame.width, y: frame.minY + 0.56893 * frame.height), controlPoint2: CGPoint(x: frame.minX + 0.54996 * frame.width, y: frame.minY + 0.56469 * frame.height))
         l3Path.addCurve(to: CGPoint(x: frame.minX + 0.56052 * frame.width, y: frame.minY + 0.54460 * frame.height), controlPoint1: CGPoint(x: frame.minX + 0.55646 * frame.width, y: frame.minY + 0.55512 * frame.height), controlPoint2: CGPoint(x: frame.minX + 0.55890 * frame.width, y: frame.minY + 0.55002 * frame.height))
         l3Path.close()
-        l3Path.usesEvenOddFillRule = true;
+        l3Path.usesEvenOddFillRule = true
 
         LyricsSourceIconDrawing.gecimiYellow.setFill()
         l3Path.fill()
-
 
         //// l2 Drawing
         let l2Path = BezierPath()
@@ -607,11 +580,10 @@ public class LyricsSourceIconDrawing {
         l2Path.addCurve(to: CGPoint(x: frame.minX + 0.40547 * frame.width, y: frame.minY + 0.48719 * frame.height), controlPoint1: CGPoint(x: frame.minX + 0.40389 * frame.width, y: frame.minY + 0.48981 * frame.height), controlPoint2: CGPoint(x: frame.minX + 0.40484 * frame.width, y: frame.minY + 0.48845 * frame.height))
         l2Path.addCurve(to: CGPoint(x: frame.minX + 0.40642 * frame.width, y: frame.minY + 0.48150 * frame.height), controlPoint1: CGPoint(x: frame.minX + 0.40610 * frame.width, y: frame.minY + 0.48592 * frame.height), controlPoint2: CGPoint(x: frame.minX + 0.40642 * frame.width, y: frame.minY + 0.48403 * frame.height))
         l2Path.close()
-        l2Path.usesEvenOddFillRule = true;
+        l2Path.usesEvenOddFillRule = true
 
         LyricsSourceIconDrawing.gecimiRed.setFill()
         l2Path.fill()
-
 
         //// l1 Drawing
         let l1Path = BezierPath()
@@ -667,12 +639,11 @@ public class LyricsSourceIconDrawing {
         l1Path.addCurve(to: CGPoint(x: frame.minX + 0.29375 * frame.width, y: frame.minY + 0.49545 * frame.height), controlPoint1: CGPoint(x: frame.minX + 0.28752 * frame.width, y: frame.minY + 0.49847 * frame.height), controlPoint2: CGPoint(x: frame.minX + 0.29014 * frame.width, y: frame.minY + 0.49662 * frame.height))
         l1Path.addCurve(to: CGPoint(x: frame.minX + 0.30377 * frame.width, y: frame.minY + 0.49315 * frame.height), controlPoint1: CGPoint(x: frame.minX + 0.29736 * frame.width, y: frame.minY + 0.49427 * frame.height), controlPoint2: CGPoint(x: frame.minX + 0.30070 * frame.width, y: frame.minY + 0.49351 * frame.height))
         l1Path.close()
-        l1Path.usesEvenOddFillRule = true;
+        l1Path.usesEvenOddFillRule = true
 
         LyricsSourceIconDrawing.gecimiBlue.setFill()
         l1Path.fill()
     }
-
 }
 
 #endif

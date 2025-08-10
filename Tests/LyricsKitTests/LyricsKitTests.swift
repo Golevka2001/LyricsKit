@@ -1,4 +1,4 @@
-import XCTest
+import Testing
 @testable import LyricsService
 
 let testSong = "Over"
@@ -6,31 +6,30 @@ let testArtist = "yihuik苡慧/白静晨"
 let duration = 155.0
 let searchReq = LyricsSearchRequest(searchTerm: .info(title: testSong, artist: testArtist), duration: duration)
 
-final class LyricsKitTests: XCTestCase {
-    private func test(provider: LyricsProvider) {
-        var searchResultEx: XCTestExpectation? = expectation(description: "Search result: \(provider)")
-        let token = provider.lyricsPublisher(request: searchReq).sink { lrc in
-            print(lrc)
-            searchResultEx?.fulfill()
-            searchResultEx = nil
+struct LyricsKitTests {
+    private func test(provider: LyricsProvider) async throws {
+        for try await lyrics in provider.lyrics(for: searchReq) {
+            print(lyrics)
         }
-        waitForExpectations(timeout: 10)
-        token.cancel()
     }
 
-    func testQQMusicProvider() {
-        test(provider: LyricsProviders.QQMusic())
+    @Test
+    func qqMusicProvider() async throws {
+        try await test(provider: LyricsProviders.QQMusic())
     }
-    
-    func testLRCLIBProvider() {
-        test(provider: LyricsProviders.LRCLIB())
+
+    @Test
+    func LRCLIBProvider() async throws {
+        try await test(provider: LyricsProviders.LRCLIB())
     }
-    
-    func testKugouProvider() {
-        test(provider: LyricsProviders.Kugou())
+
+    @Test
+    func kugouProvider() async throws {
+        try await test(provider: LyricsProviders.Kugou())
     }
-    
-    func testNetEaseProvider() {
-        test(provider: LyricsProviders.NetEase())
+
+    @Test
+    func netEaseProvider() async throws {
+        try await test(provider: LyricsProviders.NetEase())
     }
 }

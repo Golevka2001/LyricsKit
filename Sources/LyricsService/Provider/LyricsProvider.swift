@@ -27,7 +27,7 @@ extension _LyricsProvider {
 
                     let fetchTasks: [Task<Lyrics, Error>] = limitedTokens.map { token in
                         Task {
-                            var lrc = try await self.fetch(with: token)
+                            let lrc = try await self.fetch(with: token)
                             lrc.metadata.request = request
                             lrc.metadata.service = Self.service
                             return lrc

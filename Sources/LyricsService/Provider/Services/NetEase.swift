@@ -4,16 +4,14 @@ import Regex
 import BigInt
 import CryptoSwift
 
-#if canImport(FoundationNetworking)
-import FoundationNetworking
-#endif
-
-private let netEaseSearchBaseURLString = "http://music.163.com/api/search/pc?"
-private let netEaseLyricsBaseURLString = "http://music.163.com/api/song/lyric?"
-
 extension LyricsProviders {
     public final class NetEase {
-        init() {}
+        private let searchBaseURLString = "http://music.163.com/api/search/pc?"
+
+//        private let lyricsBaseURLString = "http://music.163.com/api/song/lyric?"
+        private let lyricsBaseURLString = "https://interface3.music.163.com/eapi/song/lyric/v1"
+
+        public init() {}
     }
 }
 
@@ -31,8 +29,8 @@ extension LyricsProviders.NetEase: _LyricsProvider {
             "limit": 10,
             "type": 1,
         ]
-        guard let url = URL(string: netEaseSearchBaseURLString + parameter.stringFromHttpParameters) else {
-            throw LyricsProviderError.invalidURL(urlString: netEaseSearchBaseURLString)
+        guard let url = URL(string: searchBaseURLString + parameter.stringFromHttpParameters) else {
+            throw LyricsProviderError.invalidURL(urlString: searchBaseURLString + parameter.stringFromHttpParameters)
         }
 
         var req = URLRequest(url: url)
@@ -85,8 +83,6 @@ extension LyricsProviders.NetEase: _LyricsProvider {
 //            let (data, _) = try await URLSession.shared.data(from: url)
 //            singleLyricsResponse = try JSONDecoder().decode(NetEaseResponseSingleLyrics.self, from: data)
 
-            let url = "https://interface3.music.163.com/eapi/song/lyric/v1"
-
             let data: [String: String] = [
                 "id": token.value.id.description,
                 "cp": "false",
@@ -100,7 +96,7 @@ extension LyricsProviders.NetEase: _LyricsProvider {
                 "csrf_token": "",
             ]
 
-            let raw = try await EapiHelper.post(url: url, data: data)
+            let raw = try await EapiHelper.post(url: lyricsBaseURLString, data: data)
             singleLyricsResponse = try JSONDecoder().decode(NetEaseResponseSingleLyrics.self, from: raw)
         } catch let error as DecodingError {
             throw LyricsProviderError.decodingError(underlyingError: error)
@@ -110,8 +106,9 @@ extension LyricsProviders.NetEase: _LyricsProvider {
 
         let lyrics: Lyrics
         let transLrc = (singleLyricsResponse.tlyric?.fixedLyric).flatMap(Lyrics.init(_:))
-
-        if let kLrc = (singleLyricsResponse.klyric?.fixedLyric).flatMap(Lyrics.init(netEaseKLyricContent:)) {
+        if let yrc = singleLyricsResponse.yrc?.fixedLyric, let pasredLyrics = Lyrics(netEaseYrcContent: yrc) {
+            lyrics = pasredLyrics
+        } else if let kLrc = (singleLyricsResponse.klyric?.fixedLyric).flatMap(Lyrics.init(netEaseKLyricContent:)) {
             transLrc.map(kLrc.forceMerge)
             lyrics = kLrc
         } else if let lrc = (singleLyricsResponse.lrc?.fixedLyric).flatMap(Lyrics.init(_:)) {
@@ -202,7 +199,7 @@ private enum EapiHelper {
     }
 
     private static func eApi(url: String, object: Any) -> [String: String] {
-        var modifiedUrl = url
+        let modifiedUrl = url
             .replacingOccurrences(of: "https://interface3.music.163.com/e", with: "/")
             .replacingOccurrences(of: "https://interface.music.163.com/e", with: "/")
 

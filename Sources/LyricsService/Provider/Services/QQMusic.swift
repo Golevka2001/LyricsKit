@@ -1,12 +1,6 @@
 import Foundation
 import LyricsCore
 
-// import SWXMLHash
-
-#if canImport(FoundationNetworking)
-import FoundationNetworking
-#endif
-
 private let qqSearchBaseURLString1 = "https://c.y.qq.com/splcloud/fcgi-bin/smartbox_new.fcg"
 private let qqSearchBaseURLString2 = "https://u.y.qq.com/cgi-bin/musicu.fcg"
 private let qqLyricsBaseURLString1 = "https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg"
@@ -19,7 +13,9 @@ extension LyricsProviders {
 }
 
 extension LyricsProviders.QQMusic: _LyricsProvider {
-    public typealias LyricsToken = QQMusicSongSearchResult
+    public struct LyricsToken {
+        let value: QQMusicSongSearchResult
+    }
 
     public static let service: String = "QQMusic"
 
@@ -50,7 +46,7 @@ extension LyricsProviders.QQMusic: _LyricsProvider {
         do {
             let (data, _) = try await URLSession.shared.data(for: .init(url: url))
             let result = try JSONDecoder().decode(QQResponseSearchResult.self, from: data)
-            return result.data.song.list
+            return result.data.song.list.map { LyricsToken(value: $0) }
         } catch {
             print("QQMusic search API 1 failed: \(error)")
             return []
@@ -62,11 +58,12 @@ extension LyricsProviders.QQMusic: _LyricsProvider {
     }
 
     public func fetch(with token: LyricsToken) async throws -> Lyrics {
+        let token = token.value
         let parameter: [String: Any] = [
             "musicid": token.id,
             "version": 15,
             "miniversion": 82,
-            "lrctype": 4
+            "lrctype": 4,
         ]
         guard let url = URL(string: qqLyricsBaseURLString2 + "?" + parameter.stringFromHttpParameters) else {
             throw LyricsProviderError.invalidURL(urlString: qqLyricsBaseURLString2)

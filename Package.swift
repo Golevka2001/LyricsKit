@@ -1,4 +1,4 @@
-// swift-tools-version:5.10
+// swift-tools-version:6.1
 
 import PackageDescription
 
@@ -16,7 +16,6 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/ddddxxx/Regex", from: "1.0.1"),
         .package(url: "https://github.com/MxIris-Library-Forks/SwiftCF", branch: "master"),
-        .package(url: "https://github.com/1024jp/GzipSwift", from: "5.0.0"),
         .package(url: "https://github.com/kishikawakatsumi/KeychainAccess", .upToNextMajor(from: "4.0.0")),
         .package(url: "https://github.com/MxIris-Library-Forks/Schedule", branch: "master"),
         .package(url: "https://github.com/lachlanbell/SwiftOTP", from: "3.0.2"),
@@ -45,7 +44,6 @@ let package = Package(
             dependencies: [
                 "LyricsCore",
                 .product(name: "Regex", package: "Regex"),
-                .product(name: "Gzip", package: "GzipSwift"),
                 .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                 .product(name: "BigInt", package: "BigInt"),
                 .product(name: "CryptoSwift", package: "CryptoSwift"),
@@ -68,5 +66,6 @@ let package = Package(
                 "LyricsService",
             ]
         ),
-    ]
+    ],
+    swiftLanguageModes: [.v5]
 )

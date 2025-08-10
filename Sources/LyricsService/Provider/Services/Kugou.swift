@@ -1,10 +1,6 @@
 import Foundation
 import LyricsCore
 
-#if canImport(FoundationNetworking)
-import FoundationNetworking
-#endif
-
 private let kugouSearchBaseURLString = "http://lyrics.kugou.com/search"
 private let kugouLyricsBaseURLString = "http://lyrics.kugou.com/download"
 
