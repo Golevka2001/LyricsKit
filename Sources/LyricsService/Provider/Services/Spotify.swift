@@ -26,9 +26,11 @@ extension LyricsProviders.Spotify: _LyricsProvider {
         let url: URL
         switch request.searchTerm {
         case .keyword(let string):
-            url = URL(string: "https://api.spotify.com/v1/search?q=track:\(string)&type=track&limit=\(request.limit)")!
+            guard let _url = URL(string: "https://api.spotify.com/v1/search?q=track:\(string)&type=track&limit=\(request.limit)") else { return [] }
+            url = _url
         case .info(let title, let artist):
-            url = URL(string: "https://api.spotify.com/v1/search?q=track:\(title) artist:\(artist)&type=track&limit=\(request.limit)")!
+            guard let _url = URL(string: "https://api.spotify.com/v1/search?q=track:\(title) artist:\(artist)&type=track&limit=\(request.limit)") else { return [] }
+            url = _url
         }
 
         var req = URLRequest(url: url)
