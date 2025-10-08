@@ -9,6 +9,10 @@ extension LyricsProviders {
             self.providers = service.map { $0.create() }
         }
 
+        public init(providers: [LyricsProvider]) {
+            self.providers = providers
+        }
+
         public func lyrics(for request: LyricsSearchRequest) -> AsyncThrowingStream<Lyrics, Error> {
             return AsyncThrowingStream { continuation in
                 Task {

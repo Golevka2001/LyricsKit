@@ -4,13 +4,26 @@ import LyricsCore
 
 extension LyricsProviders {
     public final class Spotify {
-        let searchAccessToken: String
+        var authenticationManager: AuthenticationManager?
 
-        let lyricsAccessToken: String
+        init() {}
 
-        init(searchAccessToken: String, lyricsAccessToken: String) {
-            self.searchAccessToken = searchAccessToken
-            self.lyricsAccessToken = lyricsAccessToken
+        private func getAccessTokens() async throws -> (search: String, lyrics: String) {
+            guard let authManager = authenticationManager else {
+                throw AuthenticationError.notAuthenticated
+            }
+
+            if !(await authManager.isAuthenticated()) {
+                try await authManager.authenticate()
+            }
+
+            let credentials = try await authManager.getCredentials()
+            guard let searchToken = credentials["searchAccessToken"],
+                  let lyricsToken = credentials["lyricsAccessToken"] else {
+                throw AuthenticationError.credentialsNotFound
+            }
+
+            return (search: searchToken, lyrics: lyricsToken)
         }
     }
 }
@@ -23,6 +36,8 @@ extension LyricsProviders.Spotify: _LyricsProvider {
     public static let service: String = "Spotify"
 
     public func search(for request: LyricsSearchRequest) async throws -> [LyricsToken] {
+        let tokens = try await getAccessTokens()
+
         let url: URL
         switch request.searchTerm {
         case .keyword(let string):
@@ -35,7 +50,7 @@ extension LyricsProviders.Spotify: _LyricsProvider {
 
         var req = URLRequest(url: url)
         req.addValue("WebPlayer", forHTTPHeaderField: "app-platform")
-        req.addValue("Bearer \(searchAccessToken)", forHTTPHeaderField: "Authorization")
+        req.addValue("Bearer \(tokens.search)", forHTTPHeaderField: "Authorization")
 
         do {
             let (data, _) = try await URLSession.shared.data(for: req)
@@ -50,6 +65,7 @@ extension LyricsProviders.Spotify: _LyricsProvider {
     }
 
     public func fetch(with token: LyricsToken) async throws -> Lyrics {
+        let tokens = try await getAccessTokens()
         let token = token.value
         guard let url = URL(string: "https://spclient.wg.spotify.com/color-lyrics/v2/track/\(token.id)?format=json&vocalRemoval=false&market=from_token") else {
             throw LyricsProviderError.invalidURL(urlString: "Spotify fetch URL")
@@ -57,7 +73,7 @@ extension LyricsProviders.Spotify: _LyricsProvider {
 
         var request = URLRequest(url: url)
         request.addValue("WebPlayer", forHTTPHeaderField: "app-platform")
-        request.addValue("Bearer \(lyricsAccessToken)", forHTTPHeaderField: "Authorization")
+        request.addValue("Bearer \(tokens.lyrics)", forHTTPHeaderField: "Authorization")
 
         let singleLyricsResponse: SpotifyResponseSingleLyrics
         do {

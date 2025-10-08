@@ -1,12 +1,12 @@
 import Foundation
 
 extension LyricsProviders {
-    public enum Service {
+    public enum Service: CaseIterable, Equatable, Hashable {
         case qq
         case netease
         case kugou
         case lrclib
-        case spotify(searchAccessToken: String, lyricsAccessToken: String)
+        case spotify
 
         public var displayName: String {
             switch self {
@@ -18,6 +18,18 @@ extension LyricsProviders {
             }
         }
 
+        public var requiresAuthentication: Bool {
+            switch self {
+            case .spotify:
+                return true
+            case .qq,
+                 .netease,
+                 .kugou,
+                 .lrclib:
+                return false
+            }
+        }
+
         public static var noAuthenticationRequiredServices: [Service] {
             [
                 .qq,
@@ -26,18 +38,40 @@ extension LyricsProviders {
                 .lrclib,
             ]
         }
+
+        public static var authenticationRequiredServices: [Service] {
+            [
+                .spotify,
+            ]
+        }
     }
 }
 
 extension LyricsProviders.Service {
-    func create() -> LyricsProvider {
+    public func create() -> LyricsProvider {
         switch self {
         case .netease: return LyricsProviders.NetEase()
         case .qq: return LyricsProviders.QQMusic()
         case .kugou: return LyricsProviders.Kugou()
-        case .spotify(let searchAccessToken, let lyricsAccessToken): return LyricsProviders.Spotify(searchAccessToken: searchAccessToken, lyricsAccessToken: lyricsAccessToken)
+        case .spotify: return LyricsProviders.Spotify()
         case .lrclib: return LyricsProviders.LRCLIB()
-//        default:        return LyricsProviders.Unsupported()
+        }
+    }
+
+    public func create(with authManager: AuthenticationManager?) async throws -> LyricsProvider {
+        switch self {
+        case .spotify:
+            guard let authManager = authManager else {
+                throw AuthenticationError.notAuthenticated
+            }
+            let provider = LyricsProviders.Spotify()
+            provider.authenticationManager = authManager
+            return provider
+        case .netease,
+             .qq,
+             .kugou,
+             .lrclib:
+            return create()
         }
     }
 }

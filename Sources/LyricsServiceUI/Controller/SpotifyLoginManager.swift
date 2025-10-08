@@ -1,6 +1,7 @@
 import AppKit
 import WebKit
 import Schedule
+import LyricsService
 
 private typealias Task = _Concurrency.Task
 private typealias ScheduleTask = Schedule.Task
@@ -150,5 +151,27 @@ public final class SpotifyLoginManager: NSObject, @unchecked Sendable {
             loginWindowController.showWindow(nil)
             loginWindowController.loginViewController.gotoLogout()
         }
+    }
+}
+
+extension SpotifyLoginManager: AuthenticationManager {
+    public func isAuthenticated() async -> Bool {
+        return await isAccessible
+    }
+
+    public func authenticate() async throws {
+        try await login()
+    }
+
+    public func getCredentials() async throws -> [String: String] {
+        guard let searchToken = await searchAccessTokenString,
+              let lyricsToken = await lyricsAccessTokenString else {
+            throw AuthenticationError.credentialsNotFound
+        }
+
+        return [
+            "searchAccessToken": searchToken,
+            "lyricsAccessToken": lyricsToken
+        ]
     }
 }
