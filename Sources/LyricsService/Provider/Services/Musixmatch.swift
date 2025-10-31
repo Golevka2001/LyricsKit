@@ -112,8 +112,11 @@ extension LyricsProviders.Musixmatch: _LyricsProvider {
 
     public func fetch(with token: LyricsToken) async throws -> Lyrics {
         // Check if synced lyrics are available
-        if token.value.hasSubtitles == 0 || token.value.instrumental == 1 {
-            return Lyrics(lines: [], idTags: [:])
+        if token.value.hasSubtitles == 0 {
+            throw LyricsProviderError.processingFailed(reason: "Lyrics not found")
+        }
+        if token.value.instrumental == 1 {
+            throw LyricsProviderError.processingFailed(reason: "Instrumental track")
         }
 
         // Build URL with query items
@@ -167,7 +170,7 @@ extension LyricsProviders.Musixmatch: _LyricsProvider {
                     .subtitleBody,
                 let track = body.matcherTrackGet?.message.body.track
             else {
-                return Lyrics(lines: [], idTags: [:])
+                throw LyricsProviderError.processingFailed(reason: "Lyrics not found")
             }
 
             let lyrics = try parseLyrics(subtitle, with: track)
