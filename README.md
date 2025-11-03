@@ -45,7 +45,7 @@ provider.lyricsPublisher(request: searchReq).sink { lyrics in
 
 #### Musixmatch source requires a token
 
-The method for retrieving lyrics from Musixmatch is adapted from [LyricsPlus](https://github.com/spicetify/cli/tree/main/CustomApps/lyrics-plus). To use this feature properly, you need to follow the steps provided [here](https://spicetify.app/docs/faq#sometimes-popup-lyrics-andor-lyrics-plus-seem-to-not-work) to obtain a usertoken.
+The method for retrieving lyrics from Musixmatch is adapted from [LyricsPlus](https://github.com/spicetify/cli/tree/main/CustomApps/lyrics-plus). To use this feature properly, you need to follow the steps provided [here](https://gist.github.com/TrueMyst/0461aea999e347182486934fd83a4cf9) or [here](https://spicetify.app/docs/faq#sometimes-popup-lyrics-andor-lyrics-plus-seem-to-not-work) to obtain a usertoken.
 
 ## License
 
