@@ -35,10 +35,19 @@ struct MusixmatchResponseSearchResult: Decodable {
     let message: Message
 
     struct Track: Decodable {
-        let albumCoverart100x100: String
-        // let albumCoverart350x350: String?
-        // let albumCoverart500x500: String?
-        // let albumCoverart800x800: String?
+        /// Preference order: 800x800 -> 500x500 -> 350x350 -> 100x100 -> empty string
+        var albumCoverBest: String {
+            if let s = albumCoverart800x800, !s.isEmpty { return s }
+            if let s = albumCoverart500x500, !s.isEmpty { return s }
+            if let s = albumCoverart350x350, !s.isEmpty { return s }
+            if let s = albumCoverart100x100, !s.isEmpty { return s }
+            return ""
+        }
+        
+        let albumCoverart100x100: String?
+        let albumCoverart350x350: String?
+        let albumCoverart500x500: String?
+        let albumCoverart800x800: String?
         // let albumId: Int?
         let albumName: String
         // let albumVanityId: String?
@@ -82,9 +91,9 @@ struct MusixmatchResponseSearchResult: Decodable {
 
         enum CodingKeys: String, CodingKey {
             case albumCoverart100x100 = "album_coverart_100x100"
-            // case albumCoverart350x350 = "album_coverart_350x350"
-            // case albumCoverart500x500 = "album_coverart_500x500"
-            // case albumCoverart800x800 = "album_coverart_800x800"
+            case albumCoverart350x350 = "album_coverart_350x350"
+            case albumCoverart500x500 = "album_coverart_500x500"
+            case albumCoverart800x800 = "album_coverart_800x800"
             // case albumId = "album_id"
             case albumName = "album_name"
             // case albumVanityId = "album_vanity_id"

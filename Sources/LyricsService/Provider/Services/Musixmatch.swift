@@ -220,7 +220,7 @@ extension LyricsProviders.Musixmatch: _LyricsProvider {
         lyrics.idTags[.album] = track.albumName
         lyrics.idTags[.lrcBy] = "Musixmatch"
         lyrics.length = Double(track.trackLength)
-        lyrics.metadata.artworkURL = URL(string: track.albumCoverart100x100)
+        lyrics.metadata.artworkURL = track.albumCoverBest.isEmpty ? nil : URL(string: track.albumCoverBest)
         lyrics.metadata.serviceToken = String(track.trackId)
         return lyrics
     }
