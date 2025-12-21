@@ -662,7 +662,7 @@ private class QrcDecodeHelper {
     ]
 
     static func BITNUM(_ a: [Int], _ b: Int, _ c: Int) throws -> Int {
-        return try (a[safe: b / 32 * 4 + 3 - b % 32 / 8]() >> (7 - b % 8) & 0x01) << c
+        return try (a[safe: b / 32 * 4 + 3 - b % 32 / 8] >> (7 - b % 8) & 0x01) << c
     }
 
     static func BITNUMINTR(_ a: Int, _ b: Int, _ c: Int) -> Int {
@@ -746,77 +746,77 @@ private class QrcDecodeHelper {
     }
 
     static func InvIP(_ state: [Int], _ ina: inout [Int]) throws {
-        ina[3] = try (BITNUMINTR(state[safe: 1](), 7, 7) |
-            BITNUMINTR(state[safe: 0](), 7, 6) |
-            BITNUMINTR(state[safe: 1](), 15, 5) |
-            BITNUMINTR(state[safe: 0](), 15, 4) |
-            BITNUMINTR(state[safe: 1](), 23, 3) |
-            BITNUMINTR(state[safe: 0](), 23, 2) |
-            BITNUMINTR(state[safe: 1](), 31, 1) |
-            BITNUMINTR(state[safe: 0](), 31, 0))
+        ina[3] = try (BITNUMINTR(state[safe: 1], 7, 7) |
+            BITNUMINTR(state[safe: 0], 7, 6) |
+            BITNUMINTR(state[safe: 1], 15, 5) |
+            BITNUMINTR(state[safe: 0], 15, 4) |
+            BITNUMINTR(state[safe: 1], 23, 3) |
+            BITNUMINTR(state[safe: 0], 23, 2) |
+            BITNUMINTR(state[safe: 1], 31, 1) |
+            BITNUMINTR(state[safe: 0], 31, 0))
 
-        ina[2] = try (BITNUMINTR(state[safe: 1](), 6, 7) |
-            BITNUMINTR(state[safe: 0](), 6, 6) |
-            BITNUMINTR(state[safe: 1](), 14, 5) |
-            BITNUMINTR(state[safe: 0](), 14, 4) |
-            BITNUMINTR(state[safe: 1](), 22, 3) |
-            BITNUMINTR(state[safe: 0](), 22, 2) |
-            BITNUMINTR(state[safe: 1](), 30, 1) |
-            BITNUMINTR(state[safe: 0](), 30, 0))
+        ina[2] = try (BITNUMINTR(state[safe: 1], 6, 7) |
+            BITNUMINTR(state[safe: 0], 6, 6) |
+            BITNUMINTR(state[safe: 1], 14, 5) |
+            BITNUMINTR(state[safe: 0], 14, 4) |
+            BITNUMINTR(state[safe: 1], 22, 3) |
+            BITNUMINTR(state[safe: 0], 22, 2) |
+            BITNUMINTR(state[safe: 1], 30, 1) |
+            BITNUMINTR(state[safe: 0], 30, 0))
 
-        ina[1] = try (BITNUMINTR(state[safe: 1](), 5, 7) |
-            BITNUMINTR(state[safe: 0](), 5, 6) |
-            BITNUMINTR(state[safe: 1](), 13, 5) |
-            BITNUMINTR(state[safe: 0](), 13, 4) |
-            BITNUMINTR(state[safe: 1](), 21, 3) |
-            BITNUMINTR(state[safe: 0](), 21, 2) |
-            BITNUMINTR(state[safe: 1](), 29, 1) |
-            BITNUMINTR(state[safe: 0](), 29, 0))
+        ina[1] = try (BITNUMINTR(state[safe: 1], 5, 7) |
+            BITNUMINTR(state[safe: 0], 5, 6) |
+            BITNUMINTR(state[safe: 1], 13, 5) |
+            BITNUMINTR(state[safe: 0], 13, 4) |
+            BITNUMINTR(state[safe: 1], 21, 3) |
+            BITNUMINTR(state[safe: 0], 21, 2) |
+            BITNUMINTR(state[safe: 1], 29, 1) |
+            BITNUMINTR(state[safe: 0], 29, 0))
 
-        ina[0] = try (BITNUMINTR(state[safe: 1](), 4, 7) |
-            BITNUMINTR(state[safe: 0](), 4, 6) |
-            BITNUMINTR(state[safe: 1](), 12, 5) |
-            BITNUMINTR(state[safe: 0](), 12, 4) |
-            BITNUMINTR(state[safe: 1](), 20, 3) |
-            BITNUMINTR(state[safe: 0](), 20, 2) |
-            BITNUMINTR(state[safe: 1](), 28, 1) |
-            BITNUMINTR(state[safe: 0](), 28, 0))
+        ina[0] = try (BITNUMINTR(state[safe: 1], 4, 7) |
+            BITNUMINTR(state[safe: 0], 4, 6) |
+            BITNUMINTR(state[safe: 1], 12, 5) |
+            BITNUMINTR(state[safe: 0], 12, 4) |
+            BITNUMINTR(state[safe: 1], 20, 3) |
+            BITNUMINTR(state[safe: 0], 20, 2) |
+            BITNUMINTR(state[safe: 1], 28, 1) |
+            BITNUMINTR(state[safe: 0], 28, 0))
 
-        ina[7] = try (BITNUMINTR(state[safe: 1](), 3, 7) |
-            BITNUMINTR(state[safe: 0](), 3, 6) |
-            BITNUMINTR(state[safe: 1](), 11, 5) |
-            BITNUMINTR(state[safe: 0](), 11, 4) |
-            BITNUMINTR(state[safe: 1](), 19, 3) |
-            BITNUMINTR(state[safe: 0](), 19, 2) |
-            BITNUMINTR(state[safe: 1](), 27, 1) |
-            BITNUMINTR(state[safe: 0](), 27, 0))
+        ina[7] = try (BITNUMINTR(state[safe: 1], 3, 7) |
+            BITNUMINTR(state[safe: 0], 3, 6) |
+            BITNUMINTR(state[safe: 1], 11, 5) |
+            BITNUMINTR(state[safe: 0], 11, 4) |
+            BITNUMINTR(state[safe: 1], 19, 3) |
+            BITNUMINTR(state[safe: 0], 19, 2) |
+            BITNUMINTR(state[safe: 1], 27, 1) |
+            BITNUMINTR(state[safe: 0], 27, 0))
 
-        ina[6] = try (BITNUMINTR(state[safe: 1](), 2, 7) |
-            BITNUMINTR(state[safe: 0](), 2, 6) |
-            BITNUMINTR(state[safe: 1](), 10, 5) |
-            BITNUMINTR(state[safe: 0](), 10, 4) |
-            BITNUMINTR(state[safe: 1](), 18, 3) |
-            BITNUMINTR(state[safe: 0](), 18, 2) |
-            BITNUMINTR(state[safe: 1](), 26, 1) |
-            BITNUMINTR(state[safe: 0](), 26, 0))
+        ina[6] = try (BITNUMINTR(state[safe: 1], 2, 7) |
+            BITNUMINTR(state[safe: 0], 2, 6) |
+            BITNUMINTR(state[safe: 1], 10, 5) |
+            BITNUMINTR(state[safe: 0], 10, 4) |
+            BITNUMINTR(state[safe: 1], 18, 3) |
+            BITNUMINTR(state[safe: 0], 18, 2) |
+            BITNUMINTR(state[safe: 1], 26, 1) |
+            BITNUMINTR(state[safe: 0], 26, 0))
 
-        ina[5] = try (BITNUMINTR(state[safe: 1](), 1, 7) |
-            BITNUMINTR(state[safe: 0](), 1, 6) |
-            BITNUMINTR(state[safe: 1](), 9, 5) |
-            BITNUMINTR(state[safe: 0](), 9, 4) |
-            BITNUMINTR(state[safe: 1](), 17, 3) |
-            BITNUMINTR(state[safe: 0](), 17, 2) |
-            BITNUMINTR(state[safe: 1](), 25, 1) |
-            BITNUMINTR(state[safe: 0](), 25, 0))
+        ina[5] = try (BITNUMINTR(state[safe: 1], 1, 7) |
+            BITNUMINTR(state[safe: 0], 1, 6) |
+            BITNUMINTR(state[safe: 1], 9, 5) |
+            BITNUMINTR(state[safe: 0], 9, 4) |
+            BITNUMINTR(state[safe: 1], 17, 3) |
+            BITNUMINTR(state[safe: 0], 17, 2) |
+            BITNUMINTR(state[safe: 1], 25, 1) |
+            BITNUMINTR(state[safe: 0], 25, 0))
 
-        ina[4] = try (BITNUMINTR(state[safe: 1](), 0, 7) |
-            BITNUMINTR(state[safe: 0](), 0, 6) |
-            BITNUMINTR(state[safe: 1](), 8, 5) |
-            BITNUMINTR(state[safe: 0](), 8, 4) |
-            BITNUMINTR(state[safe: 1](), 16, 3) |
-            BITNUMINTR(state[safe: 0](), 16, 2) |
-            BITNUMINTR(state[safe: 1](), 24, 1) |
-            BITNUMINTR(state[safe: 0](), 24, 0))
+        ina[4] = try (BITNUMINTR(state[safe: 1], 0, 7) |
+            BITNUMINTR(state[safe: 0], 0, 6) |
+            BITNUMINTR(state[safe: 1], 8, 5) |
+            BITNUMINTR(state[safe: 0], 8, 4) |
+            BITNUMINTR(state[safe: 1], 16, 3) |
+            BITNUMINTR(state[safe: 0], 16, 2) |
+            BITNUMINTR(state[safe: 1], 24, 1) |
+            BITNUMINTR(state[safe: 0], 24, 0))
     }
 
     static func f(_ state: Int, _ key: [Int]) throws -> Int {
@@ -860,18 +860,18 @@ private class QrcDecodeHelper {
 
         // Key XOR
         for i in 0 ..< 6 {
-            lrgstate[i] ^= try key[safe: i]()
+            lrgstate[i] ^= try key[safe: i]
         }
 
         // S-Box Permutation
-        state = try (sbox1[SBOXBIT(lrgstate[safe: 0]() >> 2)] << 28) |
-            (sbox2[SBOXBIT(((lrgstate[safe: 0]() & 0x03) << 4) | (lrgstate[safe: 1]() >> 4))] << 24) |
-            (sbox3[SBOXBIT(((lrgstate[safe: 1]() & 0x0F) << 2) | (lrgstate[safe: 2]() >> 6))] << 20) |
-            (sbox4[SBOXBIT(lrgstate[safe: 2]() & 0x3F)] << 16) |
-            (sbox5[SBOXBIT(lrgstate[safe: 3]() >> 2)] << 12) |
-            (sbox6[SBOXBIT(((lrgstate[safe: 3]() & 0x03) << 4) | (lrgstate[safe: 4]() >> 4))] << 8) |
-            (sbox7[SBOXBIT(((lrgstate[safe: 4]() & 0x0F) << 2) | (lrgstate[safe: 5]() >> 6))] << 4) |
-            sbox8[SBOXBIT(lrgstate[safe: 5]() & 0x3F)]
+        state = try (sbox1[SBOXBIT(lrgstate[safe: 0] >> 2)] << 28) |
+            (sbox2[SBOXBIT(((lrgstate[safe: 0] & 0x03) << 4) | (lrgstate[safe: 1] >> 4))] << 24) |
+            (sbox3[SBOXBIT(((lrgstate[safe: 1] & 0x0F) << 2) | (lrgstate[safe: 2] >> 6))] << 20) |
+            (sbox4[SBOXBIT(lrgstate[safe: 2] & 0x3F)] << 16) |
+            (sbox5[SBOXBIT(lrgstate[safe: 3] >> 2)] << 12) |
+            (sbox6[SBOXBIT(((lrgstate[safe: 3] & 0x03) << 4) | (lrgstate[safe: 4] >> 4))] << 8) |
+            (sbox7[SBOXBIT(((lrgstate[safe: 4] & 0x0F) << 2) | (lrgstate[safe: 5] >> 6))] << 4) |
+            sbox8[SBOXBIT(lrgstate[safe: 5] & 0x3F)]
 
         // P-Box Permutation
         state = BITNUMINTL(state, 15, 0) |
@@ -925,23 +925,23 @@ private class QrcDecodeHelper {
 
         // Permutated Choice #1
         for i in 0 ..< 28 {
-            C |= try BITNUM(key, key_perm_c[safe: i](), 31 - i)
-            D |= try BITNUM(key, key_perm_d[safe: i](), 31 - i)
+            C |= try BITNUM(key, key_perm_c[safe: i], 31 - i)
+            D |= try BITNUM(key, key_perm_d[safe: i], 31 - i)
         }
 
         // Generate the 16 subkeys
         for i in 0 ..< 16 {
-            C = try ((C << key_rnd_shift[safe: i]()) | (C >> (28 - key_rnd_shift[safe: i]()))) & 0xFFFFFFF0
-            D = try ((D << key_rnd_shift[safe: i]()) | (D >> (28 - key_rnd_shift[safe: i]()))) & 0xFFFFFFF0
+            C = try ((C << key_rnd_shift[safe: i]) | (C >> (28 - key_rnd_shift[safe: i]))) & 0xFFFFFFF0
+            D = try ((D << key_rnd_shift[safe: i]) | (D >> (28 - key_rnd_shift[safe: i]))) & 0xFFFFFFF0
 
             let to_gen = mode == DECRYPT ? 15 - i : i
             schedule[to_gen] = [Int](repeating: 0, count: 6)
 
             for j in 0 ..< 48 {
                 if j < 24 {
-                    try schedule[to_gen][j / 8] |= BITNUMINTR(C, key_compression[safe: j](), 7 - j % 8)
+                    try schedule[to_gen][j / 8] |= BITNUMINTR(C, key_compression[safe: j], 7 - j % 8)
                 } else {
-                    try schedule[to_gen][j / 8] |= BITNUMINTR(D, key_compression[safe: j]() - 27, 7 - j % 8)
+                    try schedule[to_gen][j / 8] |= BITNUMINTR(D, key_compression[safe: j] - 27, 7 - j % 8)
                 }
             }
         }
@@ -952,11 +952,11 @@ private class QrcDecodeHelper {
         try IP(&state, input)
 
         for idx in 0 ..< 15 {
-            let t = try state[safe: 1]()
-            state[1] = try f(state[safe: 1](), key[safe: idx]()) ^ state[safe: 0]()
+            let t = try state[safe: 1]
+            state[1] = try f(state[safe: 1], key[safe: idx]) ^ state[safe: 0]
             state[0] = t
         }
-        state[0] = try f(state[safe: 1](), key[safe: 15]()) ^ state[safe: 0]()
+        state[0] = try f(state[safe: 1], key[safe: 15]) ^ state[safe: 0]
 
         try InvIP(state, &output)
     }
@@ -1049,28 +1049,12 @@ extension Array {
         case indexOutBound
     }
 
-    fileprivate subscript(safe safeIndex: Int) -> () throws -> Element {
-        get {
-            return {
-                if safeIndex < 0 || safeIndex >= count {
-                    throw Error.indexOutBound
-                }
-                return self[safeIndex]
+    fileprivate subscript(safe safeIndex: Int) -> Element {
+        get throws {
+            if safeIndex < 0 || safeIndex >= count {
+                throw Error.indexOutBound
             }
+            return self[safeIndex]
         }
-    }
-
-    fileprivate mutating func setElement(_ element: Element, atSafeIndex safeIndex: Int) throws {
-        if safeIndex < 0 || safeIndex >= count {
-            throw Error.indexOutBound
-        }
-        self[safeIndex] = element
-    }
-
-    fileprivate func element(atSafeIndex safeIndex: Int) throws -> Element {
-        if safeIndex < 0 || safeIndex >= count {
-            throw Error.indexOutBound
-        }
-        return self[safeIndex]
     }
 }
