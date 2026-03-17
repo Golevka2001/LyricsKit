@@ -1,4 +1,4 @@
-// swift-tools-version:6.1
+// swift-tools-version:6.2
 
 import PackageDescription
 
@@ -18,7 +18,6 @@ let package = Package(
         .package(url: "https://github.com/MxIris-Library-Forks/SwiftCF", branch: "master"),
         .package(url: "https://github.com/kishikawakatsumi/KeychainAccess", .upToNextMajor(from: "4.0.0")),
         .package(url: "https://github.com/MxIris-Library-Forks/Schedule", branch: "master"),
-        .package(url: "https://github.com/lachlanbell/SwiftOTP", from: "3.0.2"),
         .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.0"),
         .package(url: "https://github.com/attaswift/BigInt", from: "5.6.0"),
         .package(url: "https://github.com/krzyzanowskim/CryptoSwift", from: "1.9.0"),
@@ -56,7 +55,6 @@ let package = Package(
                 "LyricsService",
                 .product(name: "KeychainAccess", package: "KeychainAccess"),
                 .product(name: "Schedule", package: "Schedule"),
-                .product(name: "SwiftOTP", package: "SwiftOTP"),
             ]
         ),
         .testTarget(
