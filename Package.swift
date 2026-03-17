@@ -15,9 +15,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ddddxxx/Regex", from: "1.0.1"),
-        .package(url: "https://github.com/MxIris-Library-Forks/SwiftCF", branch: "master"),
-        .package(url: "https://github.com/kishikawakatsumi/KeychainAccess", .upToNextMajor(from: "4.0.0")),
-        .package(url: "https://github.com/MxIris-Library-Forks/Schedule", branch: "master"),
+        .package(url: "https://github.com/MxIris-Library-Forks/SwiftCF", from: "0.2.2"),
+//        .package(url: "https://github.com/kishikawakatsumi/KeychainAccess", .upToNextMajor(from: "4.0.0")),
         .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.0"),
         .package(url: "https://github.com/attaswift/BigInt", from: "5.6.0"),
         .package(url: "https://github.com/krzyzanowskim/CryptoSwift", from: "1.9.0"),
@@ -53,8 +52,7 @@ let package = Package(
             dependencies: [
                 "LyricsCore",
                 "LyricsService",
-                .product(name: "KeychainAccess", package: "KeychainAccess"),
-                .product(name: "Schedule", package: "Schedule"),
+//                .product(name: "KeychainAccess", package: "KeychainAccess"),
             ]
         ),
         .testTarget(
