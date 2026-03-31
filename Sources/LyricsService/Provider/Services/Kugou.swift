@@ -92,24 +92,10 @@ extension LyricsProviders.Kugou: _LyricsProvider {
         lrc.idTags[.lrcBy] = "Kugou"
         lrc.length = Double(candidate.duration) / 1000
 
-        var urlComponents = URLComponents(string: "https://wwwapi.kugou.com/yy/index.php")!
-
-        urlComponents.queryItems = [
-            URLQueryItem(name: "r", value: "play/getdata"),
-            URLQueryItem(name: "hash", value: token.value.hash),
-            URLQueryItem(name: "dfid", value: randomString(
-                length: 23,
-                characters: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-            )),
-            URLQueryItem(name: "mid", value: randomString(
-                length: 23,
-                characters: "abcdefghijklmnopqrstuvwxyz0123456789"
-            )),
-            URLQueryItem(name: "album_id", value: token.value.albumID),
-//            URLQueryItem(name: "_", value: String(Date().timeIntervalSince1970 * 1000)),
-        ]
-
-        lrc.metadata.artworkURL = urlComponents.url
+        if let unionCover = token.value.transParam?.unionCover {
+            let coverURLString = unionCover.replacingOccurrences(of: "{size}", with: "480")
+            lrc.metadata.artworkURL = URL(string: coverURLString)
+        }
 
         lrc.metadata.serviceToken = "\(candidate.id),\(candidate.accesskey)"
 

@@ -95,9 +95,7 @@ extension LyricsProviders.QQMusic: _LyricsProvider {
         lrc.idTags[.title] = token.name
         lrc.idTags[.artist] = token.singers.joined(separator: ",")
         lrc.metadata.serviceToken = "\(token.mid)"
-        if let id = Int(token.mid) {
-            lrc.metadata.artworkURL = URL(string: "http://imgcache.qq.com/music/photo/album/\(id % 100)/\(id).jpg")
-        }
+        lrc.metadata.artworkURL = await fetchAlbumCoverURL(songMid: token.mid)
 
         if let transEncryptedString = try? xmlDocument.nodes(forXPath: "//contentts").first?.stringValue,
            let transDecryptedString = decryptQQMusicQrc(transEncryptedString),
@@ -106,5 +104,28 @@ extension LyricsProviders.QQMusic: _LyricsProvider {
         }
 
         return lrc
+    }
+
+    private func fetchAlbumCoverURL(songMid: String) async -> URL? {
+        let requestBody: [String: Any] = [
+            "comm": ["ct": 24, "cv": 0],
+            "songinfo": [
+                "module": "music.pf_song_detail_svr",
+                "method": "get_song_detail_yqq",
+                "param": ["song_mid": songMid],
+            ],
+        ]
+        guard let bodyData = try? JSONSerialization.data(withJSONObject: requestBody) else { return nil }
+        var request = URLRequest(url: URL(string: qqSearchBaseURLString2)!)
+        request.httpMethod = "POST"
+        request.httpBody = bodyData
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        guard let (data, _) = try? await URLSession.shared.data(for: request),
+              let response = try? JSONDecoder().decode(QQResponseSongDetail.self, from: data),
+              !response.songinfo.data.trackInfo.album.mid.isEmpty else {
+            return nil
+        }
+        let albumMid = response.songinfo.data.trackInfo.album.mid
+        return URL(string: "https://y.gtimg.cn/music/photo_new/T002R800x800M000\(albumMid).jpg")
     }
 }
